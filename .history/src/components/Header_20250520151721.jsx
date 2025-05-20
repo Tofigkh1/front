@@ -224,10 +224,10 @@ const Header = ({ token, logOut }) => {
                         expenses
                       </Link>
                          <Link
-                        to="/stocksadd"
+                        to="/expenses"
                         className="dropdown-link block px-4 py-2 text-gray-700 hover:text-blue-500"
                       >
-                        Stok əlavə et
+                        Stok 
                       </Link>
                     </li>
 

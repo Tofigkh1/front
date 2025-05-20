@@ -12,7 +12,7 @@ const AddWarehouseProduct = () => {
   const [editedValues, setEditedValues] = useState({});
     const [logs, setLogs] = useState([]);
   console.log("rawMaterials",rawMaterials);
-const [showModal, setShowModal] = useState(false);
+
 // const [explanationText, setExplanationText] = useState("");
 // const [selectedItemId, setSelectedItemId] = useState(null);
 
@@ -315,14 +315,14 @@ useEffect(() => {
       </thead>
       <tbody className="text-sm">
      {rawMaterials.map((item, index) => (
-  <tr   key={item.id || index} className="cursor-pointer bg-white border-b border-gray-300">
+  <tr  onClick={() => handleViewLogs(item.id)} key={item.id || index} className="cursor-pointer bg-white border-b border-gray-300">
     {/* Ad (name) - redaktə edilə bilməz */}
-    <td onClick={() => handleViewLogs(item.id)} className="p-3 truncate">
+    <td className="p-3 truncate">
       {item.name}
     </td>
 
     {/* Miqdar (quantity) - redaktə edilə bilər */}
-    <td onClick={() => handleViewLogs(item.id)} className="p-3 truncate">
+    <td className="p-3 truncate">
       {editId === item.id ? (
         <input
           type="number"
@@ -338,7 +338,7 @@ useEffect(() => {
     </td>
 
     {/* Ölçü vahidi (unit) - redaktə edilə bilməz */}
-    <td onClick={() => handleViewLogs(item.id)} className="p-3 truncate">
+    <td className="p-3 truncate">
       {category.find((cat) => cat.id === item.unit)?.label || "Naməlum"}
     </td>
 

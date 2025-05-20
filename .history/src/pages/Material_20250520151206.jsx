@@ -210,14 +210,13 @@ const handleViewLogs = async (id) => {
     const response = await axios.get(`${base_url}/raw-materials/${id}/logs`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-console.log("response",response);
 
     // Materialın adını tapın
     const material = rawMaterials.find(item => item.id === id);
     setSelectedMaterialName(material?.name || "");
     
     // Logları birbaşa selectedLogs-a əlavə edin
-    setSelectedLogs(response.data || []);
+    setSelectedLogs(response.data.data || []);
     setLogModalOpen(true);
   } catch (error) {
     console.error("Log error:", error);
@@ -225,26 +224,6 @@ console.log("response",response);
   }
 };
 
-useEffect(() => {
-  const token = localStorage.getItem("token");
-
-  axios.get(`${base_url}/raw-materials/${modalItemId}/logs`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
-    .then((response) => {
-      if (Array.isArray(response.data.data)) {
-        setLogs(response.data.data);
-      } else {
-        setLogs([]); // boş dizi at, hata olmasın
-      }
-    })
-    .catch((err) => {
-      console.error("Logları gətirərkən xəta:", err);
-      setLogs([]); // hata olursa da boş dizi at
-    });
-}, [modalItemId]);
 
 
   return (
@@ -315,14 +294,14 @@ useEffect(() => {
       </thead>
       <tbody className="text-sm">
      {rawMaterials.map((item, index) => (
-  <tr   key={item.id || index} className="cursor-pointer bg-white border-b border-gray-300">
+  <tr  onClick={() => handleViewLogs(item.id)} key={item.id || index} className="cursor-pointer bg-white border-b border-gray-300">
     {/* Ad (name) - redaktə edilə bilməz */}
-    <td onClick={() => handleViewLogs(item.id)} className="p-3 truncate">
+    <td className="p-3 truncate">
       {item.name}
     </td>
 
     {/* Miqdar (quantity) - redaktə edilə bilər */}
-    <td onClick={() => handleViewLogs(item.id)} className="p-3 truncate">
+    <td className="p-3 truncate">
       {editId === item.id ? (
         <input
           type="number"
@@ -338,7 +317,7 @@ useEffect(() => {
     </td>
 
     {/* Ölçü vahidi (unit) - redaktə edilə bilməz */}
-    <td onClick={() => handleViewLogs(item.id)} className="p-3 truncate">
+    <td className="p-3 truncate">
       {category.find((cat) => cat.id === item.unit)?.label || "Naməlum"}
     </td>
 
@@ -477,7 +456,6 @@ useEffect(() => {
     </div>
   </div>
 )}
-
 
   {/* Mobile Card List */}
   <div className="sm:hidden space-y-4">

@@ -204,24 +204,27 @@ console.log("selectedLogs",selectedLogs);
 
 
 
-const handleViewLogs = async (id) => {
+const handleViewLogs = async (id ) => {
+  console.log("logID",id);
+  
   try {
     const token = localStorage.getItem("token");
     const response = await axios.get(`${base_url}/raw-materials/${id}/logs`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
 console.log("response",response);
 
-    // Materialın adını tapın
-    const material = rawMaterials.find(item => item.id === id);
-    setSelectedMaterialName(material?.name || "");
-    
-    // Logları birbaşa selectedLogs-a əlavə edin
-    setSelectedLogs(response.data || []);
+    setSelectedLogs(response.data.data);
+
     setLogModalOpen(true);
   } catch (error) {
-    console.error("Log error:", error);
-    toast.error("Loglar yüklənmədi");
+    console.error("Loglar alınarkən xəta baş verdi:", error);
+    toast.error("Loglar yüklənərkən xəta baş verdi.", {
+      position: "top-right",
+      autoClose: 1000,
+    });
   }
 };
 
@@ -315,14 +318,14 @@ useEffect(() => {
       </thead>
       <tbody className="text-sm">
      {rawMaterials.map((item, index) => (
-  <tr   key={item.id || index} className="cursor-pointer bg-white border-b border-gray-300">
+  <tr  onClick={() => handleViewLogs(item.id)} key={item.id || index} className="cursor-pointer bg-white border-b border-gray-300">
     {/* Ad (name) - redaktə edilə bilməz */}
-    <td onClick={() => handleViewLogs(item.id)} className="p-3 truncate">
+    <td className="p-3 truncate">
       {item.name}
     </td>
 
     {/* Miqdar (quantity) - redaktə edilə bilər */}
-    <td onClick={() => handleViewLogs(item.id)} className="p-3 truncate">
+    <td className="p-3 truncate">
       {editId === item.id ? (
         <input
           type="number"
@@ -338,41 +341,46 @@ useEffect(() => {
     </td>
 
     {/* Ölçü vahidi (unit) - redaktə edilə bilməz */}
-    <td onClick={() => handleViewLogs(item.id)} className="p-3 truncate">
+    <td className="p-3 truncate">
       {category.find((cat) => cat.id === item.unit)?.label || "Naməlum"}
     </td>
 
     {/* Əməliyyatlar */}
     <td className="p-3">
  <div className="flex flex-wrap gap-2 justify-center">
-  <button
-    onClick={() => {
-      setModalItemId(item.id);
-      setModalAction("increase");
-      setShowModal(true);
-    }}
-    className="bg-green-500 text-white px-3 py-1 rounded text-sm w-[80px]"
-  >
-    Artır
-  </button>
+ <button
+  onClick={(e) => {
+    e.stopPropagation();
+    setModalItemId(item.id);
+    setModalAction("increase");
+    setShowModal(true);
+  }}
+  className="bg-green-500 text-white px-3 py-1 rounded text-sm w-[80px]"
+>
+  Artır
+</button>
 
-  <button
-    onClick={() => {
-      setModalItemId(item.id);
-      setModalAction("decrease");
-      setShowModal(true);
-    }}
-    className="bg-yellow-500 text-white px-3 py-1 rounded text-sm w-[80px]"
-  >
-    Azalt
-  </button>
+<button
+  onClick={(e) => {
+    e.stopPropagation();
+    setModalItemId(item.id);
+    setModalAction("decrease");
+    setShowModal(true);
+  }}
+  className="bg-yellow-500 text-white px-3 py-1 rounded text-sm w-[80px]"
+>
+  Azalt
+</button>
 
-  <button
-    onClick={() => handleDelete(item.id)}
-    className="rounded px-3 py-1 bg-red-600 text-white text-sm w-[60px]"
-  >
-    Sil
-  </button>
+<button
+  onClick={(e) => {
+    e.stopPropagation();
+    handleDelete(item.id);
+  }}
+  className="rounded px-3 py-1 bg-red-600 text-white text-sm w-[60px]"
+>
+  Sil
+</button>
 
 
   {/* <button
@@ -441,31 +449,42 @@ useEffect(() => {
 {logModalOpen && (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
     <div className="bg-white p-6 rounded shadow-lg w-full max-w-xl max-h-[80vh] overflow-y-auto">
-      <h2 className="text-lg font-semibold mb-4">
-        {selectedMaterialName} üçün loglar
-      </h2>
-
+      <h2 className="text-lg font-semibold mb-4">{selectedMaterialName} üçün loglar</h2>
       {selectedLogs.length > 0 ? (
-        selectedLogs.map((log) => (
-          <div key={log.id} className="border-b py-2">
-            <div className="flex justify-between">
-              <span>
-                {new Date(log.created_at).toLocaleDateString()} - 
-                {log.type === 'in' ? ' ARTIRILDI' : ' AZALDILDI'}
-              </span>
-              <span className="font-bold">
-                {log.quantity} vahid
-              </span>
+        <div className="space-y-4">
+          {selectedLogs.map((log) => (
+            <div key={log.id} className="border-b pb-2">
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <span className="font-medium">Tarix:</span> 
+                  {new Date(log.created_at).toLocaleDateString('az-AZ', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </div>
+                <div>
+                  <span className="font-medium">Tip:</span> 
+                  <span className={`ml-1 ${log.type === 'in' ? 'text-green-600' : 'text-red-600'}`}>
+                    {log.type === 'in' ? 'Artırma' : 'Azalma'}
+                  </span>
+                </div>
+                <div>
+                  <span className="font-medium">Miqdar:</span> {log.quantity}
+                </div>
+                <div>
+                  <span className="font-medium">Səbəb:</span> 
+                  {log.reason || 'Səbəb qeyd edilməyib'}
+                </div>
+              </div>
             </div>
-            {log.reason && (
-              <div className="text-gray-600 mt-1">Səbəb: {log.reason}</div>
-            )}
-          </div>
-        ))
+          ))}
+        </div>
       ) : (
-        <p>Heç bir log tapılmadı</p>
+        <p>Heç bir log tapılmadı.</p>
       )}
-
       <div className="flex justify-end mt-4">
         <button
           onClick={() => setLogModalOpen(false)}

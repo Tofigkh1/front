@@ -338,7 +338,7 @@ useEffect(() => {
     </td>
 
     {/* Ölçü vahidi (unit) - redaktə edilə bilməz */}
-    <td onClick={() => handleViewLogs(item.id)} className="p-3 truncate">
+    <td className="p-3 truncate">
       {category.find((cat) => cat.id === item.unit)?.label || "Naməlum"}
     </td>
 

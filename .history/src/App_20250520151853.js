@@ -115,7 +115,7 @@ const App = () => {
             <Route path="/genel-ayarlar" element={<GenelAyarlar />} />
             <Route path="/material" element={<Material />} />
               <Route path="/expenses" element={<Expenses />} />
-               <Route path="/stocksadd" element={<StocksAdd />} />
+               <Route path="/StocksAdd" element={<Expenses />} />
             <Route
               path="/order-details/:token"
               element={<OrderDetailsQrcod />}

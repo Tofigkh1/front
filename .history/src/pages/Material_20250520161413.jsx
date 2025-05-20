@@ -315,14 +315,14 @@ useEffect(() => {
       </thead>
       <tbody className="text-sm">
      {rawMaterials.map((item, index) => (
-  <tr   key={item.id || index} className="cursor-pointer bg-white border-b border-gray-300">
+  <tr  onClick={() => handleViewLogs(item.id)} key={item.id || index} className="cursor-pointer bg-white border-b border-gray-300">
     {/* Ad (name) - redaktə edilə bilməz */}
-    <td onClick={() => handleViewLogs(item.id)} className="p-3 truncate">
+    <td className="p-3 truncate">
       {item.name}
     </td>
 
     {/* Miqdar (quantity) - redaktə edilə bilər */}
-    <td onClick={() => handleViewLogs(item.id)} className="p-3 truncate">
+    <td className="p-3 truncate">
       {editId === item.id ? (
         <input
           type="number"
@@ -338,7 +338,7 @@ useEffect(() => {
     </td>
 
     {/* Ölçü vahidi (unit) - redaktə edilə bilməz */}
-    <td onClick={() => handleViewLogs(item.id)} className="p-3 truncate">
+    <td className="p-3 truncate">
       {category.find((cat) => cat.id === item.unit)?.label || "Naməlum"}
     </td>
 
@@ -438,45 +438,7 @@ useEffect(() => {
 )}
 
 
-{logModalOpen && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div className="bg-white p-6 rounded shadow-lg w-full max-w-xl max-h-[80vh] overflow-y-auto">
-      <h2 className="text-lg font-semibold mb-4">
-        {selectedMaterialName} üçün loglar
-      </h2>
 
-      {selectedLogs.length > 0 ? (
-        selectedLogs.map((log) => (
-          <div key={log.id} className="border-b py-2">
-            <div className="flex justify-between">
-              <span>
-                {new Date(log.created_at).toLocaleDateString()} - 
-                {log.type === 'in' ? ' ARTIRILDI' : ' AZALDILDI'}
-              </span>
-              <span className="font-bold">
-                {log.quantity} vahid
-              </span>
-            </div>
-            {log.reason && (
-              <div className="text-gray-600 mt-1">Səbəb: {log.reason}</div>
-            )}
-          </div>
-        ))
-      ) : (
-        <p>Heç bir log tapılmadı</p>
-      )}
-
-      <div className="flex justify-end mt-4">
-        <button
-          onClick={() => setLogModalOpen(false)}
-          className="px-4 py-2 bg-gray-300 rounded"
-        >
-          Bağla
-        </button>
-      </div>
-    </div>
-  </div>
-)}
 
 
   {/* Mobile Card List */}

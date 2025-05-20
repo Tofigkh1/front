@@ -13,10 +13,10 @@ const AddWarehouseProduct = () => {
     const [logs, setLogs] = useState([]);
   console.log("rawMaterials",rawMaterials);
 const [showModal, setShowModal] = useState(false);
-// const [explanationText, setExplanationText] = useState("");
-// const [selectedItemId, setSelectedItemId] = useState(null);
+const [explanationText, setExplanationText] = useState("");
+const [selectedItemId, setSelectedItemId] = useState(null);
 
-const [modalAction, setModalAction] = useState(null);
+const [modalAction, setModalAction] = useState(null); // "increase" veya "decrease"
 const [modalItemId, setModalItemId] = useState(null);
 const [modalQuantity, setModalQuantity] = useState("");
 const [modalText, setModalText] = useState("");
@@ -25,10 +25,8 @@ const [selectedLogs, setSelectedLogs] = useState([]);
 const [selectedMaterialName, setSelectedMaterialName] = useState("");
 
 
-console.log("rawMaterials",rawMaterials.id);
-console.log("selectedLogs",selectedLogs);
+console.log("logs",logs);
 
-  console.log("logs",logs);
   
 
   const fetchData = async () => {
@@ -203,48 +201,21 @@ console.log("selectedLogs",selectedLogs);
 
 
 
-
-const handleViewLogs = async (id) => {
-  try {
-    const token = localStorage.getItem("token");
-    const response = await axios.get(`${base_url}/raw-materials/${id}/logs`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-console.log("response",response);
-
-    // Materialın adını tapın
-    const material = rawMaterials.find(item => item.id === id);
-    setSelectedMaterialName(material?.name || "");
-    
-    // Logları birbaşa selectedLogs-a əlavə edin
-    setSelectedLogs(response.data || []);
-    setLogModalOpen(true);
-  } catch (error) {
-    console.error("Log error:", error);
-    toast.error("Loglar yüklənmədi");
-  }
-};
-
-useEffect(() => {
+  useEffect(() => {
   const token = localStorage.getItem("token");
 
-  axios.get(`${base_url}/raw-materials/${modalItemId}/logs`, {
+  axios.get(`${base_url}/raw-materials/`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   })
-    .then((response) => {
-      if (Array.isArray(response.data.data)) {
-        setLogs(response.data.data);
-      } else {
-        setLogs([]); // boş dizi at, hata olmasın
-      }
+    .then(response => {
+      setLogs(response.data.data); // əgər data içində gəlirsə
     })
-    .catch((err) => {
-      console.error("Logları gətirərkən xəta:", err);
-      setLogs([]); // hata olursa da boş dizi at
+    .catch(err => {
+      console.error("Hata oluştu:", err);
     });
-}, [modalItemId]);
+}, []);
 
 
   return (
@@ -315,14 +286,14 @@ useEffect(() => {
       </thead>
       <tbody className="text-sm">
      {rawMaterials.map((item, index) => (
-  <tr   key={item.id || index} className="cursor-pointer bg-white border-b border-gray-300">
+  <tr key={item.id || index} className="bg-white border-b border-gray-300">
     {/* Ad (name) - redaktə edilə bilməz */}
-    <td onClick={() => handleViewLogs(item.id)} className="p-3 truncate">
+    <td className="p-3 truncate">
       {item.name}
     </td>
 
     {/* Miqdar (quantity) - redaktə edilə bilər */}
-    <td onClick={() => handleViewLogs(item.id)} className="p-3 truncate">
+    <td className="p-3 truncate">
       {editId === item.id ? (
         <input
           type="number"
@@ -338,7 +309,7 @@ useEffect(() => {
     </td>
 
     {/* Ölçü vahidi (unit) - redaktə edilə bilməz */}
-    <td onClick={() => handleViewLogs(item.id)} className="p-3 truncate">
+    <td className="p-3 truncate">
       {category.find((cat) => cat.id === item.unit)?.label || "Naməlum"}
     </td>
 
@@ -373,16 +344,6 @@ useEffect(() => {
   >
     Sil
   </button>
-
-
-  {/* <button
-  onClick={() => handleViewLogs(item.id)}
-  className="bg-indigo-500 text-white px-3 py-1 rounded text-sm w-[70px]"
->
-  Loglar
-</button> */}
-
-
 </div>
     </td>
   </tr>
@@ -398,8 +359,6 @@ useEffect(() => {
       </tbody>
     </table>
   </div>
-
-
 {showModal && (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
     <div className="bg-white p-6 rounded shadow-lg w-full max-w-md">
@@ -431,47 +390,6 @@ useEffect(() => {
           className="px-4 py-2 bg-blue-600 text-white rounded"
         >
           Yadda saxla
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-
-{logModalOpen && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div className="bg-white p-6 rounded shadow-lg w-full max-w-xl max-h-[80vh] overflow-y-auto">
-      <h2 className="text-lg font-semibold mb-4">
-        {selectedMaterialName} üçün loglar
-      </h2>
-
-      {selectedLogs.length > 0 ? (
-        selectedLogs.map((log) => (
-          <div key={log.id} className="border-b py-2">
-            <div className="flex justify-between">
-              <span>
-                {new Date(log.created_at).toLocaleDateString()} - 
-                {log.type === 'in' ? ' ARTIRILDI' : ' AZALDILDI'}
-              </span>
-              <span className="font-bold">
-                {log.quantity} vahid
-              </span>
-            </div>
-            {log.reason && (
-              <div className="text-gray-600 mt-1">Səbəb: {log.reason}</div>
-            )}
-          </div>
-        ))
-      ) : (
-        <p>Heç bir log tapılmadı</p>
-      )}
-
-      <div className="flex justify-end mt-4">
-        <button
-          onClick={() => setLogModalOpen(false)}
-          className="px-4 py-2 bg-gray-300 rounded"
-        >
-          Bağla
         </button>
       </div>
     </div>
