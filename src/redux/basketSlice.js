@@ -54,12 +54,18 @@ const basketSlice = createSlice({
       }
     },
     decreaseQuantity: (state, action) => {
-      const item = state.items.find(item => item.id === action.payload.id);
-      if (item && item.quantity > 1) {
-        item.quantity -= 1;
-        state.totalPrice -= parseFloat(item.price); // Fiyatı azalt
-      }
-    },
+  const item = state.items.find(
+    item =>
+      item.id === action.payload.id &&
+      item.detail_id === action.payload.detail_id
+  );
+  if (item && item.quantity > 1) {
+    item.quantity -= 1;
+    state.totalPrice -= parseFloat(item.price);
+  }
+},
+
+
   },
 });
 

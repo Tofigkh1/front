@@ -12,6 +12,7 @@ import TotalPriceHesab from "../components/masasiparis/TotalPriceHesab";
 import { ToastContainer, toast } from "react-toastify";
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchTableOrderStocks } from '../redux/stocksSlice';
+import { decreaseQuantity } from "../redux/basketSlice";
 
 
 // Helper function to get headers
@@ -28,8 +29,8 @@ function MasaSiparis() {
   const [urunType, setUrunType] = useState(0); // Default to "Hamısı"
   const [stockGroups, setStockGroups] = useState([]);
   const [stocks, setStocks] = useState([]);
-  console.log("stocks",stocks);
-  
+  console.log("stocks", stocks);
+
   const [tableName, setTableName] = useState(""); // Default table name
   const [totalPrice, setTotalPrice] = useState({}); // Default total price as a number
   const [orderDetails, setOrderDetails] = useState([]); // Details of the table's orders
@@ -48,10 +49,19 @@ function MasaSiparis() {
   const [modalId, setModalId] = useState(null);
   const [handleModalMetbex, setHandleModal] = useState(false);
   const [checkedItems, setCheckedItems] = useState([]);
-const [stockSets, setStockSets] = useState([]);
-const [showSets, setShowSets] = useState(false); 
+  const [stockSets, setStockSets] = useState([]);
+  const [showSets, setShowSets] = useState(false);
+  const [openRows, setOpenRows] = useState({});
+  const toggleRow = (id) => {
+    setOpenRows((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
 
-console.log("stockSets",stockSets);
+
+
+  console.log("stockSets", stockSets);
 
   const [modalData, setModalData] = useState({
     name: "",
@@ -60,8 +70,8 @@ console.log("stockSets",stockSets);
   });
 
 
-  console.log("orderDetails",orderDetails);
-  
+  console.log("orderDetails", orderDetails);
+
 
   const [selectedProduct, setSelectedProduct] = useState({
     id: null,
@@ -70,14 +80,14 @@ console.log("stockSets",stockSets);
     quantity: 1,
   });
 
-const fetchStockSets = async () => {
-  try {
-    const response = await axios.get(`${base_url}/stock-sets`, getHeaders());
-    setStockSets(response.data);
-  } catch (error) {
-    console.error("Error loading stock sets:", error);
-  }
-};
+  const fetchStockSets = async () => {
+    try {
+      const response = await axios.get(`${base_url}/stock-sets`, getHeaders());
+      setStockSets( response.data);
+    } catch (error) {
+      console.error("Error loading stock sets:", error);
+    }
+  };
 
   // Fetch stock groups from API
   const fetchStockGroups = async () => {
@@ -92,7 +102,7 @@ const fetchStockSets = async () => {
         error.response &&
         error.response.status === 403 &&
         error.response.data.message ===
-          "User does not belong to any  active restaurant."
+        "User does not belong to any  active restaurant."
       ) {
         setActiveUser(true); // Set access denied if response status is 403
       }
@@ -101,7 +111,7 @@ const fetchStockSets = async () => {
         error.response.status === 403 &&
         error.response.data.message === "Forbidden"
       ) {
-      
+
       } else {
         console.error("Error loading customers:", error);
       }
@@ -121,16 +131,16 @@ const fetchStockSets = async () => {
         error.response &&
         error.response.status === 403 &&
         error.response.data.message ===
-          "User does not belong to any  active restaurant."
+        "User does not belong to any  active restaurant."
       ) {
-        setActiveUser(true); 
+        setActiveUser(true);
       }
       if (
         error.response &&
         error.response.status === 403 &&
         error.response.data.message === "Forbidden"
       ) {
-     
+
       } else {
         console.error("Error loading customers:", error);
       }
@@ -139,79 +149,79 @@ const fetchStockSets = async () => {
 
 
   // Fetch table orders
- const fetchTableOrders = async () => {
-  try {
-    const response = await axios.get(
-      `${base_url}/tables/${id}/order`,
-      getHeaders()
-    );
-    console.log("responseSetStock",response);
-    
-    const orders = response.data.table.orders;
-    setTableName(response.data.table.name);
-    setOrdersIdMassa({
-      id: response.data.table.orders[0].order_id,
-      total_price: response.data.table.orders[0].total_price,
-      total_prepayment: response.data.table.orders[0].total_prepayment,
-    });
+  const fetchTableOrders = async () => {
+    try {
+      const response = await axios.get(
+        `${base_url}/tables/${id}/order`,
+        getHeaders()
+      );
+      console.log("responseSetStock", response);
 
-    // Stocks və Sets məlumatlarını birləşdir
-    const formattedOrders = orders.map((order) => {
-      // Stocks məlumatları
-      const stockItems = order.stocks.map((stock) => ({
-        id: stock.id,
-        name: stock.name,
-        quantity: stock.quantity,
-        price: stock.price,
-        pivot_id: stock.pivot_id,
-        unit: stock.detail?.unit,
-        count: stock.detail?.count,
-        detail_id: stock.detail,
-        type: 'stock' // Tipi qeyd edirik
-      }));
+      const orders = response.data.table.orders;
+      setTableName(response.data.table.name);
+      setOrdersIdMassa({
+        id: response.data.table.orders[0].order_id,
+        total_price: response.data.table.orders[0].total_price,
+        total_prepayment: response.data.table.orders[0].total_prepayment,
+      });
 
-      // Sets məlumatları
-      const setItems = order.sets.map((set) => ({
-        id: set.id,
-        name: set.name,
-        quantity: set.quantity,
-        price: set.price,
-        pivot_id: set.pivot.id,
-        type: 'set', // Tipi qeyd edirik
-        items: set.items // Set içindəki məhsullar
-      }));
+      // Stocks və Sets məlumatlarını birləşdir
+      const formattedOrders = orders.map((order) => {
+        // Stocks məlumatları
+        const stockItems = order.stocks.map((stock) => ({
+          id: stock.id,
+          name: stock.name,
+          quantity: stock.quantity,
+          price: stock.price,
+          pivot_id: stock.pivot_id,
+          unit: stock.detail?.unit,
+          count: stock.detail?.count,
+          detail_id: stock.detail,
+          type: 'stock' // Tipi qeyd edirik
+        }));
 
-      return {
-        totalPrice: order.total_price,
-        total_prepayment: order.total_prepayment,
-        items: [...stockItems, ...setItems] // Birləşdirilmiş məlumatlar
-      };
-    });
+        // Sets məlumatları
+        const setItems = order.sets.map((set) => ({
+          id: set.id,
+          name: set.name,
+          quantity: set.quantity,
+          price: set.price,
+          pivot_id: set.pivot.id,
+          type: 'set', // Tipi qeyd edirik
+          items: set.items // Set içindəki məhsullar
+        }));
 
-    // Bütün maddələri düz array edirik
-    const allItems = formattedOrders.flatMap((order) => order.items);
-    setOrderDetails(allItems);
+        return {
+          totalPrice: order.total_price,
+          total_prepayment: order.total_prepayment,
+          items: [...stockItems, ...setItems] // Birləşdirilmiş məlumatlar
+        };
+      });
 
-    // Ümumi qiyməti hesabla
-    const total = formattedOrders.reduce((acc, order) => acc + order.totalPrice, 0);
-    const total_prepare = formattedOrders.reduce(
-      (acc, order) => acc + order.total_prepayment,
-      0
-    );
-    const kalanMebleg = total - total_prepare;
-    setTotalPrice({
-      total: total,
-      total_prepare: total_prepare,
-      kalan: kalanMebleg
-    });
-    
-  } catch (error) {
-    // Xəta idarəsi
-  }
-};
+      // Bütün maddələri düz array edirik
+      const allItems = formattedOrders.flatMap((order) => order.items);
+      setOrderDetails(allItems);
+
+      // Ümumi qiyməti hesabla
+      const total = formattedOrders.reduce((acc, order) => acc + order.totalPrice, 0);
+      const total_prepare = formattedOrders.reduce(
+        (acc, order) => acc + order.total_prepayment,
+        0
+      );
+      const kalanMebleg = total - total_prepare;
+      setTotalPrice({
+        total: total,
+        total_prepare: total_prepare,
+        kalan: kalanMebleg
+      });
+
+    } catch (error) {
+      // Xəta idarəsi
+    }
+  };
 
 
-  
+
 
   useEffect(() => {
     dispatch(fetchTableOrderStocks(id));
@@ -219,19 +229,38 @@ const fetchStockSets = async () => {
 
 
 
-  console.log("id",id);
+  console.log("id", id);
   const { allItems, orders, loading, error } = useSelector((state) => state.stocks);
 
 
 
 
-// const tableOrders = useSelector((state) => state.stocks.tableOrders);
-// const loading = useSelector((state) => state.stocks.loading);
-// const error = useSelector((state) => state.stocks.error);
+  // const tableOrders = useSelector((state) => state.stocks.tableOrders);
+  // const loading = useSelector((state) => state.stocks.loading);
+  // const error = useSelector((state) => state.stocks.error);
+
+  const handleRemoveSet = async (setId, quantity) => {
+  try {
+    await axios.post(
+      `${base_url}/qr/${id}/order`,
+      {
+        stock_set_id: setId,
+        quantity: quantity || 1
+      },
+      getHeaders()
+    );
+    toast.info("Set azaltıldı");
+    fetchTableOrders();
+  } catch (error) {
+    console.error("Error removing set:", error);
+  }
+};
 
 
-console.log("tableData",allItems);
-console.log("orders",orders);
+
+
+  console.log("tableData", allItems);
+  console.log("orders", orders);
 
 
   // Delete orders
@@ -246,7 +275,7 @@ console.log("orders",orders);
         error.response &&
         error.response.status === 403 &&
         error.response.data.message ===
-          "User does not belong to any  active restaurant."
+        "User does not belong to any  active restaurant."
       ) {
         setActiveUser(true); // Set access denied if response status is 403
       }
@@ -263,46 +292,47 @@ console.log("orders",orders);
   };
 
 
-//   const handleAddStockSet = async (setId) => {
-//   try {
-//     await axios.post(
-//       `${base_url}/tables/${id}/add-stock-set`,
-//       {
-//         stock_set_id: setId,
-//         quantity: 1,
-//       },
-//       getHeaders()
-//     );
-//     toast.info("Set əlavə olundu");
-//     fetchTableOrders();
-//   } catch (error) {
-//     console.error("Error adding stock set:", error);
-//   }
-// };
+  //   const handleAddStockSet = async (setId) => {
+  //   try {
+  //     await axios.post(
+  //       `${base_url}/tables/${id}/add-stock-set`,
+  //       {
+  //         stock_set_id: setId,
+  //         quantity: 1,
+  //       },
+  //       getHeaders()
+  //     );
+  //     toast.info("Set əlavə olundu");
+  //     fetchTableOrders();
+  //   } catch (error) {
+  //     console.error("Error adding stock set:", error);
+  //   }
+  // };
 
-  
-const handleCustomModal = (item) => {
-  console.log("item",item);
-  
-  if (item.stocks) { // Bu bir set ise
-    handleAddStock(item.id); // Set ekleme fonksiyonunu çağır
-  } else { // Normal stok ise
-    const selectedStock = stocks.find((stock) => stock.id === item.id);
-    if (selectedStock) {
-      if (selectedStock.details && selectedStock.details.length > 0) {
-        setModalId(selectedStock?.id);
-        setModalData({
-          name: selectedStock?.name,
-          desc: selectedStock?.description,
-          price: selectedStock?.price,
-        });
-        setNoOrderModal(true);
-      } else {
-        handleAddStock(selectedStock.id);
+
+  const handleCustomModal = (item) => {
+    console.log("item", item);
+
+    if (item.stocks) { // Bu bir set ise
+      handleAddStock(item.id); // Set ekleme fonksiyonunu çağır
+    } else { // Normal stok ise
+      const selectedStock = stocks.find((stock) => stock.id === item.id);
+      if (selectedStock) {
+        if (selectedStock.details && selectedStock.details.length > 0) {
+          setModalId(selectedStock?.id);
+          setModalData({
+            name: selectedStock?.name,
+            desc: selectedStock?.description,
+            price: selectedStock?.price,
+          });
+          setNoOrderModal(true);
+        } else {
+          handleAddStock(selectedStock.id);
+        }
       }
     }
-  }
-};
+  };
+
 
 
 
@@ -327,7 +357,7 @@ const handleCustomModal = (item) => {
     localStorage.setItem("urunType", urunType);
   }, [urunType]);
 
-  
+
   const handleAddStock = async (stockId, selectedProduct = null) => {
     try {
       await axios.post(
@@ -370,8 +400,8 @@ const handleCustomModal = (item) => {
     quantity,
     increase_boolean
   ) => {
-    console.log("stockId",stockId);
-    
+    console.log("stockId", stockId);
+
     try {
       await axios.post(
         `${base_url}/tables/${id}/subtract-stock`,
@@ -389,7 +419,47 @@ const handleCustomModal = (item) => {
         error.response &&
         error.response.status === 403 &&
         error.response.data.message ===
-          "User does not belong to any  active restaurant."
+        "User does not belong to any  active restaurant."
+      ) {
+        setActiveUser(true);
+      }
+      if (
+        error.response &&
+        error.response.status === 403 &&
+        error.response.data.message === "Forbidden"
+      ) {
+        setAccessDenied(true);
+      } else {
+        console.error("Error removing stock from order:", error);
+      }
+    }
+  };
+  const handleRemoveStock2 = async (
+    stockId,
+    pivot_id,
+    quantity,
+    increase_boolean
+  ) => {
+    console.log("stockId", stockId);
+
+    try {
+      await axios.post(
+        `${base_url}/tables/${id}/subtract-stock`,
+        {
+          stock_id: stockId,
+          quantity: quantity || 1,
+          pivotId: pivot_id,
+          increase: increase_boolean,
+        },
+        getHeaders()
+      );
+      fetchTableOrders();
+    } catch (error) {
+      if (
+        error.response &&
+        error.response.status === 403 &&
+        error.response.data.message ===
+        "User does not belong to any  active restaurant."
       ) {
         setActiveUser(true);
       }
@@ -409,9 +479,8 @@ const handleCustomModal = (item) => {
 
   const handlePrint = () => {
     const now = new Date();
-    const formattedDate = `${now.getFullYear()}-${
-      now.getMonth() + 1
-    }-${now.getDate()}`;
+    const formattedDate = `${now.getFullYear()}-${now.getMonth() + 1
+      }-${now.getDate()}`;
     const formattedTime = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
 
     const printContent = `
@@ -521,38 +590,36 @@ const handleCustomModal = (item) => {
           <tbody>
             
               ${orderDetails
-                ?.map(
-                  (item, index) => `
+        ?.map(
+          (item, index) => `
                     <tr key="${item.id}">
                     <td>${index + 1}</td>
                     <td>
                     ${item.name} <br/>${item?.count ? `${item.unit || ""}` : ""}
                   </td>
                   
-                      <td>${
-                        item.count ? item.count * item.quantity : item.quantity
-                      }</td>
+                      <td>${item.count ? item.count * item.quantity : item.quantity
+            }</td>
                       <td>${item?.count ? item.quantity : 0}</td>
                       <td>${(item.price / item.quantity).toFixed(2)} </td>
                       <td>${(
-                        item.quantity *
-                        (item.price / item.quantity)
-                      ).toFixed(2)} </td>
+              item.quantity *
+              (item.price / item.quantity)
+            ).toFixed(2)} </td>
                     </tr>
                   `
-                )
-                .join("")}
+        )
+        .join("")}
           </tbody>
       </table>
       <div class="total">
           <div>
               <p class="cem">CƏM: ${totalPrice.total.toFixed(2)} Azn</p>
-              ${
-                totalPrice?.total_prepare && totalPrice.total_prepare !== 0
-                  ? `<p>Artıq ödənilib: ${totalPrice.total_prepare} AZN</p>
+              ${totalPrice?.total_prepare && totalPrice.total_prepare !== 0
+        ? `<p>Artıq ödənilib: ${totalPrice.total_prepare} AZN</p>
                      <p>Qalıq: ${totalPrice.kalan.toFixed(2)} Azn</p>`
-                  : ""
-              }
+        : ""
+      }
             </div>
             <strong>${fis}</strong>
       </div>
@@ -571,21 +638,23 @@ const handleCustomModal = (item) => {
   };
 
   useEffect(() => {
-  const storedUrunType = localStorage.getItem("urunType");
-  if (storedUrunType) {
-    setUrunType(Number(storedUrunType));
-  }
-  fetchStockGroups();
-  fetchTableOrders();
-  fetchStockSets(); // Stock setleri yükle
-}, [id, refreshFetch]);
+    const storedUrunType = localStorage.getItem("urunType");
+    if (storedUrunType) {
+      setUrunType(Number(storedUrunType));
+    }
+    fetchStockGroups();
+    fetchTableOrders();
+    fetchStockSets(); // Stock setleri yükle
+  }, [id, refreshFetch]);
 
   useEffect(() => {
-  // Eğer urunType -1 değilse (yani setler görünmüyorsa)
-  if (urunType !== -1) {
-    setShowSets(false);
-  }
-}, [urunType])
+    // Eğer urunType -1 değilse (yani setler görünmüyorsa)
+    if (urunType !== -1) {
+      setShowSets(false);
+    }
+  }, [urunType])
+
+
 
 
 
@@ -682,29 +751,27 @@ const handleCustomModal = (item) => {
           </thead>
           <tbody>
             ${checkedItems
-              ?.map(
-                (item, index) => `
+        ?.map(
+          (item, index) => `
                   <tr>
                     <td>${index + 1}</td>
                     <td className=" py-2">
                       ${item?.name}
-                      ${
-                        item?.detail_id?.unit
-                          ? ` (${item?.detail_id?.unit})`
-                          : ""
-                      }
+                      ${item?.detail_id?.unit
+              ? ` (${item?.detail_id?.unit})`
+              : ""
+            }
                     </td>
                   
-                    <td>${
-                      item.count ? item.count * item.quantity : item.quantity
-                    }</td>
+                    <td>${item.count ? item.count * item.quantity : item.quantity
+            }</td>
                     <td>${item?.count ? item.quantity : 0}</td>
                     <td>${item.customIngredient || "Yoxdur"}</td>
                   
                   </tr>
                 `
-              )
-              .join("")}
+        )
+        .join("")}
           </tbody>
         </table>
       </div>
@@ -721,14 +788,14 @@ const handleCustomModal = (item) => {
 
     setHandleModal(false);
   };
-console.log("orderDetails",orderDetails);
+  console.log("orderDetails", orderDetails);
 
 
 
 
   return (
     <>
-     
+
       <Helmet>
         <title>Masaların sifarişi | Smartcafe</title>
         <meta
@@ -788,182 +855,183 @@ console.log("orderDetails",orderDetails);
                   ]}
                 />
               </thead>
-          <tbody>
-  {orderDetails.map((item, index) => {
-    // Set məhsulları üçün xüsusi göstərilmə
-    if (item.type === 'set') {
-      return (
-        <React.Fragment key={`set-${item.id}-${index}`}>
-          {/* Set özü */}
-          <tr className="border-b bg-gray-100">
-            <td className="grid place-items-center">
-              <input
-                type="checkbox"
-                className="w-6 h-4 mt-6"
-                onChange={(e) => handleCheckboxChange(item, e)}
-              />
-            </td>
-            <td className="p-5 font-bold">
-              {item.name} (Set)
-            </td>
-            <td className="p-2">
-              <div className="flex items-center">
-                <button
-                  onClick={() => handleRemoveStock(item.id, item.pivot_id, item.quantity)}
-                  className="bg-red-500 text-white py-1 px-1 rounded-l focus:outline-none"
-                >
-                  -
-                </button>
-                <input
-                  type="number"
-                  value={item.quantity}
-                  className="border-t border-b py-1 text-center w-16 text-lg"
-                  readOnly
-                />
-                <button
-                  onClick={() => handleAddStock(item.id)}
-                  className="bg-green-500 text-white py-1 px-2 rounded-r focus:outline-none"
-                >
-                  +
-                </button>
-              </div>
-            </td>
-            <td className="p-3 text-right">
-              {item.price.toFixed(2)} ₼
-            </td>
-            <td 
-              onClick={() => handleRemoveStock(item.id, item.pivot_id, item.quantity)}
-              className="p-3 text-red-500 cursor-pointer text-center"
-            >
-              <i className="fa-solid fa-trash-can"></i>
-            </td>
-          </tr>
-          
-          {/* Set içindəki məhsullar */}
-          {item.items.map((setItem, idx) => (
-            <tr key={`set-item-${setItem.stock_id}-${idx}`} className="border-b text-sm">
-              <td></td>
-              <td className="pl-8 italic">
-                → {setItem.stock_name}
-              </td>
-              <td className="p-3">
-                {setItem.quantity * item.quantity}
-              </td>
-              <td></td>
-              <td></td>
-            </tr>
-          ))}
-        </React.Fragment>
-      );
-    }
+              <tbody>
+                {orderDetails.map((item, index) => {
+                  // Set məhsulları üçün xüsusi göstərilmə
+                  if (item.type === 'set') {
+                    return (
+                      <React.Fragment key={`set-${item.id}-${index}`}>
+                        {/* Set özü */}
+                        <tr
+                          className="border-b bg-gray-100 cursor-pointer"
+                          onClick={() => toggleRow(item.id)}
+                        >
+                          <td className="grid place-items-center">
+                            <input
+                              type="checkbox"
+                              className="w-6 h-4 mt-6"
+                              onChange={(e) => handleCheckboxChange(item, e)}
+                              onClick={(e) => e.stopPropagation()} // checkbox'a tıklama satır açma/kapamayı tetiklemesin
+                            />
+                          </td>
+                          <td className="p-5 font-bold">{item.name} (Set)</td>
+                          <td className="p-2">
+                            <div className="flex items-center">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRemoveSet(item.id, item.quantity);
+                                }}
+                                className="bg-red-500 text-white py-1 px-1 rounded-l focus:outline-none"
+                              >
+                                -
+                              </button>
+                              <input
+                                type="number"
+                                value={item.quantity}
+                                className="border-t border-b py-1 text-center w-16 text-lg"
+                                readOnly
+                              />
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAddStock(item.id);
+                                }}
+                                className="bg-green-500 text-white py-1 px-2 rounded-r focus:outline-none"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </td>
+                          <td className="p-3 text-right">{item.price.toFixed(2)} ₼</td>
+                          <td
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveStock2(item.id, item?.pivot_id, item.quantity);
+                            }}
+                            className="p-3 text-red-500 cursor-pointer text-center"
+                          >
+                            <i className="fa-solid fa-trash-can"></i>
+                          </td>
+                        </tr>
 
-    // Normal məhsullar
-    return (
-      <tr key={`${item.id}-${index}`} className="border-b">
-        <td className=" grid place-items-center">
-          <input
-            type="checkbox"
-            className="w-6 h-4 mt-6"
-            onChange={(e) => handleCheckboxChange(item, e)}
-          />
-        </td>
+                        {/* Alt satır sadece açıkken gösterilir */}
+                        {openRows[item.id] &&
+                          item.items.map((setItem, idx) => (
+                            <tr key={`set-item-${setItem.stock_id}-${idx}`} className="border-b text-sm">
+                              <td></td>
+                              <td className="pl-8 italic">→ {setItem.stock_name}</td>
+                              <td className="p-3">{setItem.quantity * item.quantity}</td>
+                              <td></td>
+                              <td></td>
+                            </tr>
+                          ))}
+                      </React.Fragment>
 
-        {item?.count ? (
-          <>
-            <td className="p-5">
-              {item.name} {item.count}{" "}
-              <span className="mx-2">{item.unit}</span>{" "}
-            </td>
-            <td className="p-2">
-              <div className="flex items-center">
-                <button
-                  onClick={() =>
-                    handleRemoveStock(
-                      item.id,
-                      item?.pivot_id,
-                      item.quantity,
-                      true
-                    )
+                    );
                   }
-                  className="bg-red-500 text-white text-lg py-1 px-2 rounded-l focus:outline-none"
-                >
-                  -
-                </button>
-                <input
-                  type="number"
-                  value={item.quantity}
-                  className="border-t border-b py-1 px-2 text-center w-10 text-lg"
-                  readOnly
-                />
-                <button
-                  onClick={() => {
-                    handleAddStock(item.id, item?.detail_id);
-                  }}
-                  className="bg-green-500 text-lg text-white py-1 px-2 rounded-r focus:outline-none"
-                >
-                  +
-                </button>
-              </div>
-            </td>
-          </>
-        ) : (
-          <>
-            <td className="p-5">{item.name}</td>
-            <td className="p-2">
-              <div className="flex items-center">
-                <button
-                  onClick={() =>
-                    handleRemoveStock(
-                      item.id,
-                      item?.pivot_id,
-                      item.quantity,
-                      true
-                    )
-                  }
-                  className="bg-red-500 text-white py-1 px-1 rounded-l focus:outline-none"
-                >
-                  -
-                </button>
-                <input
-                  type="number"
-                  value={item.quantity}
-                  className="border-t border-b py-1 text-center w-16 text-lg"
-                  readOnly
-                />
-                <button
-                  onClick={() => handleAddStock(item.id)}
-                  className="bg-green-500 text-white py-1 px-2 rounded-r focus:outline-none"
-                >
-                  +
-                </button>
-              </div>
-            </td>
-          </>
-        )}
 
-        <td className="p-3 text-right">
-          {Number.isFinite(Number(item.price))
-            ? Number(item.price).toFixed(2)
-            : "0.00"}{" "}
-          ₼
-        </td>
+                  // Normal məhsullar
+                  return (
+                    <tr key={`${item.id}-${index}`} className="border-b">
+                      <td className=" grid place-items-center">
+                        <input
+                          type="checkbox"
+                          className="w-6 h-4 mt-6"
+                          onChange={(e) => handleCheckboxChange(item, e)}
+                        />
+                      </td>
 
-        <td
-          onClick={() =>
-            handleRemoveStock(
-              item.id,
-              item?.pivot_id,
-              item.quantity
-            )
-          }
-          className="p-3 text-red-500 cursor-pointer text-center"
-        >
-          <i className="fa-solid fa-trash-can"></i>
-        </td>
-      </tr>
-    );
-  })}
-</tbody>
+                      {item?.count ? (
+                        <>
+                          <td className="p-5">
+                            {item.name} {item.count}{" "}
+                            <span className="mx-2">{item.unit}</span>{" "}
+                          </td>
+                          <td className="p-2">
+                            <div className="flex items-center">
+                              <button
+                                onClick={() =>
+                                  handleRemoveStock(
+                                    item.id,
+                                    item?.pivot_id,
+                                    item.quantity,
+                                    true
+                                  )
+                                }
+                                className="bg-red-500 text-white text-lg py-1 px-2 rounded-l focus:outline-none"
+                              >
+                                -
+                              </button>
+                              <input
+                                type="number"
+                                value={item.quantity}
+                                className="border-t border-b py-1 px-2 text-center w-10 text-lg"
+                                readOnly
+                              />
+                              <button
+                                onClick={() => {
+                                  handleAddStock(item.id, item?.detail_id);
+                                }}
+                                className="bg-green-500 text-lg text-white py-1 px-2 rounded-r focus:outline-none"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="p-5">{item.name}</td>
+                          <td className="p-2">
+                            <div className="flex items-center">
+                              <button
+                                onClick={() => handleRemoveSet(item.id, item.pivot?.id, item.quantity)}
+
+                                className="bg-red-500 text-white py-1 px-1 rounded-l focus:outline-none"
+                              >
+                                -
+                              </button>
+                              <input
+                                type="number"
+                                value={item.quantity}
+                                className="border-t border-b py-1 text-center w-16 text-lg"
+                                readOnly
+                              />
+                              <button
+                                onClick={() => handleAddStock(item.id)}
+                                className="bg-green-500 text-white py-1 px-2 rounded-r focus:outline-none"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </td>
+                        </>
+                      )}
+
+                      <td className="p-3 text-right">
+                        {Number.isFinite(Number(item.price))
+                          ? Number(item.price).toFixed(2)
+                          : "0.00"}{" "}
+                        ₼
+                      </td>
+
+                      <td
+                        onClick={() =>
+                          handleRemoveStock(
+                            item.id,
+                            item?.pivot_id,
+                            item.quantity
+                          )
+                        }
+                        className="p-3 text-red-500 cursor-pointer text-center"
+                      >
+                        <i className="fa-solid fa-trash-can"></i>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
             </table>
           </div>
           {role !== "waiter" && (
@@ -1040,83 +1108,81 @@ console.log("orderDetails",orderDetails);
           <div className="flex flex-wrap gap-2  mb-4">
             <button
               onClick={() => setUrunType(0)}
-              className={`p-2 btn-filter ${
-                urunType === 0
-                  ? "bg-blue-500 text-white border-blue-500"
-                  : "bg-gray-200"
-              }`}
+              className={`p-2 btn-filter ${urunType === 0
+                ? "bg-blue-500 text-white border-blue-500"
+                : "bg-gray-200"
+                }`}
             >
               Hamısı
             </button>
-  <button
-    onClick={() => {
-      setShowSets(true);
-      setUrunType(-1); // Setler için özel bir değer
-    }}
-    className={`p-2 btn-filter ${
-      showSets
-        ? "bg-blue-500 text-white border-blue-500"
-        : "bg-gray-200"
-    }`}
-  >
-    Setler
-  </button>
-          
+            <button
+              onClick={() => {
+                setShowSets(true);
+                setUrunType(-1); // Setler için özel bir değer
+              }}
+              className={`p-2 btn-filter ${showSets
+                ? "bg-blue-500 text-white border-blue-500"
+                : "bg-gray-200"
+                }`}
+            >
+              Setler
+            </button>
+
           </div>
           <div className=" h-[800px]  overflow-y-scroll flex-1 ">
             <div className="grid grid-cols-2 sm:grid-cols-3 h-[200px]   md:grid-cols-3 lg:grid-cols-3 gap-4">
-               {showSets ? (
+              {showSets ? (
 
-      stockSets.map((set) => (
-         <div
-            key={set.id}
-            className="bg-white border rounded-lg p-4 shadow-md flex flex-col cursor-pointer"
-    onClick={() => handleCustomModal(set)}
-            
-          >
-            <div className="w-full h-32 bg-gray-300 mb-2">
-           
-            </div>
-            <div className="flex-grow">
-              <span className="block text-lg font-semibold">
-                {`${set.price} ₼`}
-              </span>
-              <p className="text-sm text-gray-600 truncate">
-                {set.name}
-              </p>
-            </div>
-          </div>
-      ))
-    ) : (
+                stockSets.map((set) => (
+                  <div
+                    key={set.id}
+                    className="bg-white border rounded-lg p-4 shadow-md flex flex-col cursor-pointer"
+                    onClick={() => handleCustomModal(set)}
 
-      stocks.map((stock) => (
-         <div
-                  key={stock.id}
-                  className="bg-white border rounded-lg p-4 shadow-md flex flex-col cursor-pointer"
-                onClick={() => handleCustomModal(stock)}
-                >
-                  <div className="w-full h-32 bg-gray-300 mb-2">
-                    <img
-                      src={replaceImage(stock.image)}
-                      alt={stock.name}
-                      className="w-full h-full object-contain"
-                    />
+                  >
+                    <div className="w-full h-32 bg-gray-300 mb-2">
+
+                    </div>
+                    <div className="flex-grow">
+                      <span className="block text-lg font-semibold">
+                        {`${set.price} ₼`}
+                      </span>
+                      <p className="text-sm text-gray-600 truncate">
+                        {set.name}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex-grow">
-                    <span className="block text-lg font-semibold">{` ${stock.price} ₼`}</span>
-                    <p className="text-sm text-gray-600 truncate">
-                      {stock.name}
-                    </p>
+                ))
+              ) : (
+
+                stocks.map((stock) => (
+                  <div
+                    key={stock.id}
+                    className="bg-white border rounded-lg p-4 shadow-md flex flex-col cursor-pointer"
+                    onClick={() => handleCustomModal(stock)}
+                  >
+                    <div className="w-full h-32 bg-gray-300 mb-2">
+                      <img
+                        src={replaceImage(stock.image)}
+                        alt={stock.name}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <div className="flex-grow">
+                      <span className="block text-lg font-semibold">{` ${stock.price} ₼`}</span>
+                      <p className="text-sm text-gray-600 truncate">
+                        {stock.name}
+                      </p>
+                    </div>
                   </div>
-                </div>
-      ))
-    )}
+                ))
+              )}
             </div>
           </div>
         </div>
       </section>
 
-      
+
       {oncedenodePopop && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center p-4 z-50">
           <div className="w-full max-w-3xl bg-white rounded-lg shadow-lg overflow-hidden border border-gray-300 relative">
@@ -1243,8 +1309,8 @@ console.log("orderDetails",orderDetails);
               {selectedProduct?.id == null
                 ? (modalData.price * selectedProduct.quantity).toFixed(2)
                 : (selectedProduct.price * selectedProduct.quantity).toFixed(
-                    2
-                  )}{" "}
+                  2
+                )}{" "}
               ₼
             </p>
 

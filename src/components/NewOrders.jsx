@@ -75,6 +75,7 @@ const NewOrders = () => {
         };
     }, [hasNewOrders]);
 
+
     const handleOpenModal = () => {
         setIsModalOpen(true);
     };
@@ -209,7 +210,18 @@ const NewOrders = () => {
                                             )}
                                             <p className="text-lg font-medium mb-1">{tableOrder.order.stocks[0]?.name}</p>
                                             <p className="text-gray-600">Mikdar: {tableOrder.order.stocks[0]?.pivot.quantity}</p>
-                                            <p className="text-gray-600">Toplam: {tableOrder.order.stocks[0]?.pivot.quantity * tableOrder.order.stocks[0]?.price} ₼</p>
+         <p className="text-gray-600">
+  Toplam: {
+    (
+      Number(tableOrder?.order?.stocks?.[0]?.pivot?.quantity || 0) *
+      Number(tableOrder?.order?.stocks?.[0]?.price || 0)
+    ).toFixed(2)
+  } ₼
+</p>
+
+
+
+
                                             {tableOrder.order.stocks[0] && (
   <p className="text-gray-600 flex gap-2">
   <h1 className=' '>Detalı:</h1>  {tableOrder.order.stocks[0].detail?.unit} 

@@ -38,9 +38,9 @@ function GunlukKasa() {
     const [dataTotal, setDataTotal] = useState({});
     const [modalData, setModalData] = useState(null);
 
-    console.log("modalData",modalData);
-    console.log("data",data);
-    
+    console.log("modalData", modalData);
+    console.log("data", data);
+
 
     // Filter state
     const [startDate, setStartDate] = useState('');
@@ -50,59 +50,67 @@ function GunlukKasa() {
     const [paymentType, setPaymentType] = useState('');
     const [accessDenied, setAccessDenied] = useState(false);
     const [ActiveUser, setActiveUser] = useState(false);
+    const [openRows, setOpenRows] = useState({});
+    const toggleRow = (index) => {
+        setOpenRows((prev) => ({
+            ...prev,
+            [index]: !prev[index],
+        }));
+    };
 
-    console.log("startDate",startDate);
-    console.log("startTime",startTime);
-    console.log("endTime",endTime);
-    
-    console.log("endDate",endDate);
-    
-    
-    
-  const fetchKasa = () => {
-    const params = new URLSearchParams();
 
-    if (startDate) {
-        const openDateTime = startTime ? `${startDate} ${startTime}` : startDate;
-        params.append('open_date', openDateTime);
-    }
+    console.log("startDate", startDate);
+    console.log("startTime", startTime);
+    console.log("endTime", endTime);
 
-    if (endDate) {
-        const closeDateTime = endTime ? `${endDate} ${endTime}` : endDate;
-        params.append('close_date', closeDateTime);
-    }
+    console.log("endDate", endDate);
 
-    if (paymentType) {
-        params.append('type', paymentType);
-    }
 
-    axios.get(`${base_url}/payments?${params.toString()}`, getHeaders())
-        .then(response => {
-            const sortedData = response.data.payments
-                .map(item => ({
-                    ...item,
-                    duration: formatDuration(item.days_taken, item.hours_taken, item.minutes_taken),
-                }))
-                .sort((a, b) => new Date(b.open_date) - new Date(a.open_date));
 
-            setData(sortedData);
-            setDataTotal({
-                totalKasa: response.data.total_amount,
-                totalCash: response.data.total_cash,
-                totalBank: response.data.total_bank
+    const fetchKasa = () => {
+        const params = new URLSearchParams();
+
+        if (startDate) {
+            const openDateTime = startTime ? `${startDate} ${startTime}` : startDate;
+            params.append('open_date', openDateTime);
+        }
+
+        if (endDate) {
+            const closeDateTime = endTime ? `${endDate} ${endTime}` : endDate;
+            params.append('close_date', closeDateTime);
+        }
+
+        if (paymentType) {
+            params.append('type', paymentType);
+        }
+
+        axios.get(`${base_url}/payments?${params.toString()}`, getHeaders())
+            .then(response => {
+                const sortedData = response.data.payments
+                    .map(item => ({
+                        ...item,
+                        duration: formatDuration(item.days_taken, item.hours_taken, item.minutes_taken),
+                    }))
+                    .sort((a, b) => new Date(b.open_date) - new Date(a.open_date));
+
+                setData(sortedData);
+                setDataTotal({
+                    totalKasa: response.data.total_amount,
+                    totalCash: response.data.total_cash,
+                    totalBank: response.data.total_bank
+                });
+            })
+            .catch(error => {
+                if (error.response && error.response.status === 403 && error.response.data.message === "User does not belong to any  active restaurant.") {
+                    setActiveUser(true);
+                }
+                if (error.response && error.response.status === 403 && error.response.data.message === "Forbidden") {
+                    setAccessDenied(true);
+                } else {
+                    console.error('Error fetching orders:', error);
+                }
             });
-        })
-        .catch(error => {
-            if (error.response && error.response.status === 403 && error.response.data.message === "User does not belong to any  active restaurant.") {
-                setActiveUser(true);
-            }
-            if (error.response && error.response.status === 403 && error.response.data.message === "Forbidden") {
-                setAccessDenied(true);
-            } else {
-                console.error('Error fetching orders:', error);
-            }
-        });
-};
+    };
 
 
     useEffect(() => {
@@ -262,108 +270,108 @@ function GunlukKasa() {
 
     return (
         <>
-        <PasswordScreen/>
-                   <Helmet>
-        <title> Kassa | Smartcafe</title>
-        <meta name="description" content='Restoran proqramı | Kafe - Restoran idarə etmə sistemi ' />
-      </Helmet>
-        <section className='p-4'>
-            <div className='rounded border'>
-                <div className='p-3 border-b bg-[#fafbfc]'>
-                    <h3 className='font-semibold text-lg'>Kasa hisesi</h3>
-                </div>
-                <div className='p-3 bg-white flex flex-col sm:flex-row gap-5'>
-                    {/* Filter Section */}
-                    <div className='p-3 border rounded bg-[#fafbfc] w-full md:w-1/4 sm:w-4/4 '>
-                        <div className='flex flex-col mb-5'>
-                            <h3 className='text-sm font-semibold mb-2'>Başlanğıc</h3>
-                            <input
-                                className='border rounded py-2 px-3 w-full mb-2 outline-none text-sm font-medium'
-                                type="date"
-                                name="startDate"
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
-                            />
-                            <input
-                                className='border rounded py-2 px-3 w-full outline-none text-sm font-medium'
-                                type="time"
-                                name="startTime"
-                                value={startTime}
-                                onChange={(e) => setStartTime(e.target.value)}
-                            />
-                        </div>
-                        <div className='flex flex-col mb-5'>
-                            <h3 className='text-sm font-semibold mb-2'>Bitmə tarixi</h3>
-                            <input
-                                className='border rounded py-2 px-3 w-full mb-2 outline-none text-sm font-medium'
-                                type="date"
-                                name="endDate"
-                                value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
-                            />
-                            <input
-                                className='border rounded py-2 px-3 w-full outline-none text-sm font-medium'
-                                type="time"
-                                name="endTime"
-                                value={endTime}
-                                onChange={(e) => setEndTime(e.target.value)}
-                            />
-                        </div>
-
-                        <div className='flex flex-col mb-5'>
-                            <h3 className='text-sm font-semibold mb-2'>Ödeme növü</h3>
-                            <select
-                                className='border rounded py-2 px-3 w-full outline-none text-sm font-medium'
-                                name="paymentType"
-                                value={paymentType}
-                                onChange={(e) => setPaymentType(e.target.value)}
-                            >
-                                <option value="">Hamısı</option>
-                                <option value="cash">Nağd pul</option>
-                                <option value="bank">Kredit kartı</option>
-                            </select>
-                        </div>
-
-                        <div className='flex flex-col md:flex-row gap-3 flex-wrap'>
-                            <button
-                                className='rounded py-2 px-4 bg-red-600 text-white'
-                                onClick={fetchKasa}
-                            >
-                                Filtr
-                            </button>
-                            <button
-                                className='rounded py-2 px-4 bg-blue-500 text-white'
-                                onClick={resetFilters}
-                            >
-                                Temizle
-                            </button>
-                            <button
-                                className='flex items-center gap-2 rounded py-2 px-4 bg-slate-900 text-white'
-                                onClick={printReport}
-                            >
-                                <i className="fa-solid fa-print"></i> Yazdır
-                            </button>
-                        </div>
-
-
+            <PasswordScreen />
+            <Helmet>
+                <title> Kassa | Smartcafe</title>
+                <meta name="description" content='Restoran proqramı | Kafe - Restoran idarə etmə sistemi ' />
+            </Helmet>
+            <section className='p-4'>
+                <div className='rounded border'>
+                    <div className='p-3 border-b bg-[#fafbfc]'>
+                        <h3 className='font-semibold text-lg'>Kasa hisesi</h3>
                     </div>
-                    {/* Data Table Section */}
-                    <div className='p-3 border rounded w-full bg-white'>
-                        <div className='flex flex-col md:flex-row gap-3 mb-3'>
-                            <button
-                                className='rounded py-2 px-4 bg-zinc-600 text-white'
-                                onClick={exportToExcel}
-                            >
-                                EXCEL
-                            </button>
-                            <button
-                                className='rounded py-2 px-4 bg-zinc-600 text-white'
-                                onClick={exportToPDF}
-                            >
-                                PDF
-                            </button>
+                    <div className='p-3 bg-white flex flex-col sm:flex-row gap-5'>
+                        {/* Filter Section */}
+                        <div className='p-3 border rounded bg-[#fafbfc] w-full md:w-1/4 sm:w-4/4 '>
+                            <div className='flex flex-col mb-5'>
+                                <h3 className='text-sm font-semibold mb-2'>Başlanğıc</h3>
+                                <input
+                                    className='border rounded py-2 px-3 w-full mb-2 outline-none text-sm font-medium'
+                                    type="date"
+                                    name="startDate"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                />
+                                <input
+                                    className='border rounded py-2 px-3 w-full outline-none text-sm font-medium'
+                                    type="time"
+                                    name="startTime"
+                                    value={startTime}
+                                    onChange={(e) => setStartTime(e.target.value)}
+                                />
+                            </div>
+                            <div className='flex flex-col mb-5'>
+                                <h3 className='text-sm font-semibold mb-2'>Bitmə tarixi</h3>
+                                <input
+                                    className='border rounded py-2 px-3 w-full mb-2 outline-none text-sm font-medium'
+                                    type="date"
+                                    name="endDate"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                />
+                                <input
+                                    className='border rounded py-2 px-3 w-full outline-none text-sm font-medium'
+                                    type="time"
+                                    name="endTime"
+                                    value={endTime}
+                                    onChange={(e) => setEndTime(e.target.value)}
+                                />
+                            </div>
+
+                            <div className='flex flex-col mb-5'>
+                                <h3 className='text-sm font-semibold mb-2'>Ödeme növü</h3>
+                                <select
+                                    className='border rounded py-2 px-3 w-full outline-none text-sm font-medium'
+                                    name="paymentType"
+                                    value={paymentType}
+                                    onChange={(e) => setPaymentType(e.target.value)}
+                                >
+                                    <option value="">Hamısı</option>
+                                    <option value="cash">Nağd pul</option>
+                                    <option value="bank">Kredit kartı</option>
+                                </select>
+                            </div>
+
+                            <div className='flex flex-col md:flex-row gap-3 flex-wrap'>
+                                <button
+                                    className='rounded py-2 px-4 bg-red-600 text-white'
+                                    onClick={fetchKasa}
+                                >
+                                    Filtr
+                                </button>
+                                <button
+                                    className='rounded py-2 px-4 bg-blue-500 text-white'
+                                    onClick={resetFilters}
+                                >
+                                    Temizle
+                                </button>
+                                <button
+                                    className='flex items-center gap-2 rounded py-2 px-4 bg-slate-900 text-white'
+                                    onClick={printReport}
+                                >
+                                    <i className="fa-solid fa-print"></i> Yazdır
+                                </button>
+                            </div>
+
+
                         </div>
-                        {/* <table className='w-full text-left border rounded bg-[#fafbfc] mb-3'>
+                        {/* Data Table Section */}
+                        <div className='p-3 border rounded w-full bg-white'>
+                            <div className='flex flex-col md:flex-row gap-3 mb-3'>
+                                <button
+                                    className='rounded py-2 px-4 bg-zinc-600 text-white'
+                                    onClick={exportToExcel}
+                                >
+                                    EXCEL
+                                </button>
+                                <button
+                                    className='rounded py-2 px-4 bg-zinc-600 text-white'
+                                    onClick={exportToPDF}
+                                >
+                                    PDF
+                                </button>
+                            </div>
+                            {/* <table className='w-full text-left border rounded bg-[#fafbfc] mb-3'>
                             <thead className='border-b'>
                                 <tr>
                                     <th className='p-2 md:p-3'>Masa/Ad soyad</th>
@@ -398,136 +406,158 @@ function GunlukKasa() {
                                 ))}
                             </tbody>
                         </table> */}
-                        <div className='overflow-x-auto'>
-    <table className='w-full text-left border rounded bg-[#fafbfc] mb-3'>
-        <thead className='border-b border-black'>
-            <tr>
-                <th className='p-2 md:p-3'>Masa/Ad soyad</th>
-                <th className='p-2 md:p-3'>Açılış</th>
-                <th className='p-2 md:p-3'>Bağlanma</th>
-                <th className='p-2 md:p-3'>Müddət</th>
-                <th className='p-2 md:p-3'>Cəmi</th>
-                <th className='p-2 md:p-3'>Ödəniş növü</th>
-                <th className='p-2 md:p-3'>İşçi</th>
-                <th className='p-2 md:p-3'>Ətrfalı</th>
-            </tr>
-        </thead>
-        <tbody>
-        {data.map((item) => (
-  <tr key={item.id} className="border-b border-black"> {/* Her satırın altına çizgi */}
-    <td className='p-2 md:p-3 border-r border-black'>{item.order_name}</td>
-    <td className='p-2 md:p-3 border-r border-black'>{item.open_date}</td>
-    <td className='p-2 md:p-3 border-r border-black'>{item.close_date}</td>
-    <td className='p-2 md:p-3 border-r border-black'>{item.duration}</td>
-    <td className='p-2 md:p-3 border-r border-black'>{item.total_amount} ₼</td>
-    <td className='p-2 md:p-3 border-r border-black'>
-      {item.type === "cash"
-        ? "Nağd"
-        : item.type === "bank"
-        ? "Ümumi bank köçürməsi"
-        : item.type === "customer_balance"
-        ? "Müştəri hesabına"
-        : "Hissə hissə ödə"}
-    </td>
-    <td className='p-2 md:p-3 border-r border-black'>{item.user_name}</td>
-    <td className='p-2 md:p-3'>
-      <button
-        className='rounded py-1 px-3 bg-blue-600 text-white'
-        onClick={() => showModal(item)}
-      >
-        Ətrfalı
-      </button>
-    </td>
-  </tr>
-))}
+                            <div className='overflow-x-auto'>
+                                <table className='w-full text-left border rounded bg-[#fafbfc] mb-3'>
+                                    <thead className='border-b border-black'>
+                                        <tr>
+                                            <th className='p-2 md:p-3'>Masa/Ad soyad</th>
+                                            <th className='p-2 md:p-3'>Açılış</th>
+                                            <th className='p-2 md:p-3'>Bağlanma</th>
+                                            <th className='p-2 md:p-3'>Müddət</th>
+                                            <th className='p-2 md:p-3'>Cəmi</th>
+                                            <th className='p-2 md:p-3'>Ödəniş növü</th>
+                                            <th className='p-2 md:p-3'>İşçi</th>
+                                            <th className='p-2 md:p-3'>Ətrfalı</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {data.map((item) => (
+                                            <tr key={item.id} className="border-b border-black"> {/* Her satırın altına çizgi */}
+                                                <td className='p-2 md:p-3 border-r border-black'>{item.order_name}</td>
+                                                <td className='p-2 md:p-3 border-r border-black'>{item.open_date}</td>
+                                                <td className='p-2 md:p-3 border-r border-black'>{item.close_date}</td>
+                                                <td className='p-2 md:p-3 border-r border-black'>{item.duration}</td>
+                                                <td className='p-2 md:p-3 border-r border-black'>{item.total_amount} ₼</td>
+                                                <td className='p-2 md:p-3 border-r border-black'>
+                                                    {item.type === "cash"
+                                                        ? "Nağd"
+                                                        : item.type === "bank"
+                                                            ? "Ümumi bank köçürməsi"
+                                                            : item.type === "customer_balance"
+                                                                ? "Müştəri hesabına"
+                                                                : "Hissə hissə ödə"}
+                                                </td>
+                                                <td className='p-2 md:p-3 border-r border-black'>{item.user_name}</td>
+                                                <td className='p-2 md:p-3'>
+                                                    <button
+                                                        className='rounded py-1 px-3 bg-blue-600 text-white'
+                                                        onClick={() => showModal(item)}
+                                                    >
+                                                        Ətrfalı
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
 
-        </tbody>
-    </table>
-</div>
+                                    </tbody>
+                                </table>
+                            </div>
 
-                        <div className='w-full md:w-1/3 p-3 border rounded bg-[#fafbfc]'>
-                            <h3 className='mb-3 font-bold'>Cəmi</h3>
-                            <table className='text-left w-full text-sm'>
-                                <tbody>
-                                    <tr className='bg-neutral-100'>
-                                        <th className='p-3'>Ümumi Kasa</th>
-                                        <th className='p-3'>{dataTotal.totalKasa?.toFixed(2) ?? 0} ₼</th>
-                                    </tr>
-                                    <tr className='bg-neutral-100'>
-                                        <th className='p-3'>Ümumi Avans</th>
-                                        <th className='p-3'>{dataTotal.totalCash ?? 0} ₼</th>
-                                    </tr>
-                                    <tr className='bg-neutral-100'>
-                                        <th className='p-3'>Ümumi Bank köçürməsi</th>
-                                        <th className='p-3'>{dataTotal.totalBank ?? 0} ₼</th>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            <div className='w-full md:w-1/3 p-3 border rounded bg-[#fafbfc]'>
+                                <h3 className='mb-3 font-bold'>Cəmi</h3>
+                                <table className='text-left w-full text-sm'>
+                                    <tbody>
+                                        <tr className='bg-neutral-100'>
+                                            <th className='p-3'>Ümumi Kasa</th>
+                                            <th className='p-3'>{dataTotal.totalKasa?.toFixed(2) ?? 0} ₼</th>
+                                        </tr>
+                                        <tr className='bg-neutral-100'>
+                                            <th className='p-3'>Ümumi Avans</th>
+                                            <th className='p-3'>{dataTotal.totalCash ?? 0} ₼</th>
+                                        </tr>
+                                        <tr className='bg-neutral-100'>
+                                            <th className='p-3'>Ümumi Bank köçürməsi</th>
+                                            <th className='p-3'>{dataTotal.totalBank ?? 0} ₼</th>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {modalData && (
-                <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50'>
-                    <div className='bg-white p-5 rounded shadow-lg w-full md:w-1/2'>
-                        <h3 className='text-xl font-bold mb-4'>{modalData.order_name}</h3>
-                        <p><strong>Açılış:</strong> {modalData.open_date}</p>
-                        <p><strong>Bağlanma:</strong> {modalData.close_date}</p>
-                        <p><strong>Müddət:</strong> {modalData.duration}</p>
-                        <p><strong>Cəmi:</strong> {modalData.total_amount} ₼</p>
-                        <p><strong>Ödəniş növü</strong> {modalData.type}</p>
-                        <p><strong>İşçi:</strong> {modalData.user_name}</p>
-                        <h4 className='text-lg font-semibold mt-4 mb-2'>Sifarişlər</h4>
-<table className='w-full text-left border rounded bg-[#fafbfc]'>
-  <thead className='border-b'>
-    <tr>
-      <th className='p-3'>Adı</th>
-      <th className='p-3'>Miqdar</th>
-      <th className='p-3'>Qiyməti</th>
-    </tr>
-  </thead>
-  <tbody>
-    {modalData?.items && modalData.items.length > 0 ? (
-      <>
-        {modalData.items.map((item, index) => (
-          <tr key={`${item.name}-${index}`} className='border-b'>
-            <td className='p-3'>{item.name}</td>
-            <td className='p-3'>{item.quantity}</td>
-            <td className='p-3'>{item.price}</td>
+                {modalData && (
+                    <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50'>
+                        <div className='bg-white p-5 rounded shadow-lg w-full md:w-1/2'>
+                            <h3 className='text-xl font-bold mb-4'>{modalData.order_name}</h3>
+                            <p><strong>Açılış:</strong> {modalData.open_date}</p>
+                            <p><strong>Bağlanma:</strong> {modalData.close_date}</p>
+                            <p><strong>Müddət:</strong> {modalData.duration}</p>
+                            <p><strong>Cəmi:</strong> {modalData.total_amount} ₼</p>
+                            <p><strong>Ödəniş növü</strong> {modalData.type}</p>
+                            <p><strong>İşçi:</strong> {modalData.user_name}</p>
+                            <h4 className='text-lg font-semibold mt-4 mb-2'>Sifarişlər</h4>
+                            <table className='w-full text-left border rounded bg-[#fafbfc]'>
+                                <thead className='border-b'>
+                                    <tr>
+                                        <th className='p-3'>Adı</th>
+                                        <th className='p-3'>Miqdar</th>
+                                        <th className='p-3'>Qiyməti</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {modalData?.items && modalData.items.length > 0 ? (
+  <>
+    {modalData.items.map((item, index) => (
+      <React.Fragment key={`${item.name}-${index}`}>
+        <tr
+          className={`border-b ${item.components ? 'cursor-pointer bg-gray-100' : ''}`}
+          onClick={() => item.components && toggleRow(index)}
+        >
+          <td className='p-3'>
+            {item.name}
+            {item.components && (
+              <span className='ml-2 text-gray-500'>{openRows[index] ? '▲' : '▼'}</span>
+            )}
+          </td>
+          <td className='p-3'>{item.quantity}</td>
+          <td className='p-3'>{item.price}</td>
+        </tr>
+
+        {/* Açılır satırlar */}
+        {item.components && openRows[index] && item.components.map((component, cIdx) => (
+          <tr key={`component-${index}-${cIdx}`} className='border-b text-sm text-gray-700'>
+            <td className='pl-8 italic'>↳ {component.name}</td>
+            <td className='p-3'>{component.quantity}</td>
+            <td></td>
           </tr>
         ))}
-        <tr className='font-semibold'>
-          <td className='p-3' colSpan={2}>Cəmi</td>
-          <td className='p-3'>{modalData.total_amount}</td>
-        </tr>
-      </>
-    ) : (
-      <tr>
-        <td className='p-3' colSpan={3}>Sifariş yoxdur</td>
-      </tr>
-    )}
-  </tbody>
-</table>
+      </React.Fragment>
+    ))}
+
+    {/* Toplam */}
+    <tr className='font-semibold'>
+      <td className='p-3' colSpan={2}>Cəmi</td>
+      <td className='p-3'>{modalData.total_amount}</td>
+    </tr>
+  </>
+) : (
+  <tr>
+    <td className='p-3' colSpan={3}>Sifariş yoxdur</td>
+  </tr>
+)}
+
+                                </tbody>
+                            </table>
 
 
-                  
-                        <button
-                            className='mt-4 px-4 py-2 bg-red-600 text-white rounded'
-                            onClick={() => handleDelete(modalData.order_id)}
-                        >
-                            Sil
-                        </button>
-                        <button
-                            className='mt-4 ml-4 px-4 py-2 bg-blue-500 text-white rounded'
-                            onClick={hideModal}
-                        >
-                            Bağlayın
-                        </button>
+
+                            <button
+                                className='mt-4 px-4 py-2 bg-red-600 text-white rounded'
+                                onClick={() => handleDelete(modalData.order_id)}
+                            >
+                                Sil
+                            </button>
+                            <button
+                                className='mt-4 ml-4 px-4 py-2 bg-blue-500 text-white rounded'
+                                onClick={hideModal}
+                            >
+                                Bağlayın
+                            </button>
+                        </div>
                     </div>
-                </div>
-            )}
-        </section>
+                )}
+            </section>
         </>
     );
 }

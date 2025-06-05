@@ -14,27 +14,27 @@ const getHeaders = () => ({
     'Accept': 'application/json',
   }
 });
-function HesapKes({orderId, totalAmount,orderStocks,quickOrderId }) {
-  console.log("totalAmount",totalAmount);
-  console.log("orderStocks",orderStocks);
-  console.log("orderId",orderId);
-  
+function HesapKes({ orderId, totalAmount, orderStocks, quickOrderId }) {
+  console.log("totalAmount", totalAmount);
+  console.log("orderStocks", orderStocks);
+  console.log("orderId", orderId);
+
   const { id } = useParams();
   const dispatch = useDispatch();
 
   const [isCariMusteriSelected, setIsCariMusteriSelected] = useState(false);
   const [isParcaParcaOde, setIsParcaParcaOde] = useState(false);
   const [numberOfPeople, setNumberOfPeople] = useState(2);
-  const [discount, setDiscount] = useState(""); 
+  const [discount, setDiscount] = useState("");
   const [sum, setSum] = useState(Array(numberOfPeople).fill(0));
   const [selectedPaymentType, setSelectedPaymentType] = useState('');
   const [customerOptions, setCustomerOptions] = useState([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
 
   const discountedTotal = totalAmount * (1 - discount / 100);
-  
 
-  
+
+
   useEffect(() => {
     dispatch(fetchTableOrderStocks(id));
   }, [id, dispatch]);
@@ -45,31 +45,28 @@ function HesapKes({orderId, totalAmount,orderStocks,quickOrderId }) {
   const { shares, orderID, items: orderItems } = useSelector((state) => state.order);
 
 
- console.log("orderID",orderID);
- 
-  console.log("SHARES STATE:", shares);
-  console.log("items",orderItems);
   
+
 
   orderItems.forEach(item => {
     console.log("Item Name:", item.name, "Pivot ID:", item.pivot_id);
   });
 
-  
-// const tableOrders = useSelector((state) => state.stocks.tableOrders);
-// const loading = useSelector((state) => state.stocks.loading);
-// const error = useSelector((state) => state.stocks.error);
+
+  // const tableOrders = useSelector((state) => state.stocks.tableOrders);
+  // const loading = useSelector((state) => state.stocks.loading);
+  // const error = useSelector((state) => state.stocks.error);
 
 
-if (orders && orders.length > 0) {
-  console.log("orders2", orders[0].order_id);
-} else {
-  console.log("orders2: Order verisi henüz gelmedi veya boş.");
-}
+  if (orders && orders.length > 0) {
+    console.log("orders2", orders[0].order_id);
+  } else {
+    console.log("orders2: Order verisi henüz gelmedi veya boş.");
+  }
   const navigate = useNavigate()
 
-  
-  const [accessDenied, setAccessDenied] = useState(false); 
+
+  const [accessDenied, setAccessDenied] = useState(false);
   useEffect(() => {
     if (isCariMusteriSelected) {
       axios.get(`${base_url}/customers`, getHeaders())
@@ -97,7 +94,7 @@ if (orders && orders.length > 0) {
       setNumberOfPeople(2); // Set initial value for dynamic selection
       updateSumArray(2); // Update the sum state to split the total amount
     } else {
-      setNumberOfPeople(0); 
+      setNumberOfPeople(0);
     }
   };
 
@@ -129,111 +126,123 @@ if (orders && orders.length > 0) {
   const sumMessage = totalSum > discountedTotal
     ? 'Toplam Məbləğ aşıldı!'
     : totalSum < discountedTotal
-    ? `Toplam Məbləğ eksik! ${Math.abs(discountedTotal - totalSum).toFixed(2)} eksik`
-    : '';
+      ? `Toplam Məbləğ eksik! ${Math.abs(discountedTotal - totalSum).toFixed(2)} eksik`
+      : '';
 
-    const handleSubmit = async (event) => {
-      event.preventDefault();
-    
-      if (discountedTotal <= 0) {
-        alert('İndirimli məbləğ sıfır və ya mənfi ola bilməz!');
-        return;
-      }
-    
-      if (selectedPaymentType === 'parca-ode' && sum.some(amount => amount <= 0)) {
-        alert('Bütün hissələr üçün etibarlı məbləğlər daxil edin.');
-        return;
-      }
-    
-      if (selectedPaymentType === 'musteriye-aktar' && !selectedCustomerId) {
-        alert('Zəhmət olmasa "Cari müştəriyə köçür" üçün müştəri seçin.');
-        return;
-      }
-      const mappedItems = allItems.map(item => ({
-        name: item.name,
-        quantity: item.quantity,
-        price: item.price,
+ const handleSubmit = async (event) => {
+  event.preventDefault();
+
+  if (discountedTotal <= 0) {
+    alert('İndirimli məbləğ sıfır və ya mənfi ola bilməz!');
+    return;
+  }
+
+  if (selectedPaymentType === 'parca-ode' && sum.some(amount => amount <= 0)) {
+    alert('Bütün hissələr üçün etibarlı məbləğlər daxil edin.');
+    return;
+  }
+
+  if (selectedPaymentType === 'musteriye-aktar' && !selectedCustomerId) {
+    alert('Zəhmət olmasa "Cari müştəriyə köçür" üçün müştəri seçin.');
+    return;
+  }
+
+  const mappedItems = allItems.map(item => ({
+    name: item.name || item.stock_name || 'Unknown',
+    quantity: item.quantity || 1,
+    price: item.price || 0,
+    order_stock_id: item.order_stock_id || item.stock_id || item.id || null
+  }));
+
+  const mappedItems2 = (share) =>
+    Array.isArray(share.items)
+      ? share.items.map(item => ({
+          name: item.name || item.stock_name || 'Unknown',
+          quantity: item.quantity || 1,
+          price: item.price || 0,
+          order_stock_id: item.order_stock_id || item.stock_id || item.id || null
+        }))
+      : [];
+
+  const paymentData = {
+    shares: []
+  };
+
+  if (shares && shares.length > 0) {
+    // share-lər varsa (yəni setlərlə ödəniş bölünübsə)
+    if (selectedPaymentType === 'parca-ode') {
+      paymentData.shares = sum.map((amount, index) => ({
+        type: 'cash',
+        amount: parseFloat(amount),
+        customer_id: null,
+        items: mappedItems2(shares[index])
       }));
+    } else {
+      paymentData.shares.push({
+        type:
+          selectedPaymentType === 'pesin'
+            ? 'cash'
+            : selectedPaymentType === 'bank-havale'
+            ? 'bank'
+            : 'customer_balance',
+        amount: parseFloat(discountedTotal.toFixed(2)),
+        customer_id: selectedCustomerId || null,
+        items: mappedItems2(shares[0])
+      });
+    }
+  } else {
+    // əgər shares yoxdursa, yəni sadəcə allItems ilə
+    if (selectedPaymentType === 'parca-ode') {
+      paymentData.shares = sum.map((amount) => ({
+        type: 'cash',
+        amount: parseFloat(amount),
+        customer_id: null,
+        items: mappedItems
+      }));
+    } else {
+      paymentData.shares.push({
+        type:
+          selectedPaymentType === 'pesin'
+            ? 'cash'
+            : selectedPaymentType === 'bank-havale'
+            ? 'bank'
+            : 'customer_balance',
+        amount: parseFloat(discountedTotal.toFixed(2)),
+        customer_id: selectedCustomerId || null,
+        items: mappedItems
+      });
+    }
+  }
 
-      const mappedItems2 = (share) =>
-        Array.isArray(share.items)
-          ? share.items.map(item => ({
-              name: item.name,
-              quantity: item.quantity,
-              price: item.price,
-            }))
-          : [];
-    
-      const paymentData = {
-        shares: []
-      };
-    
-      if (shares && shares.length > 0) {
-        // shares varsa, mappedItems2 kullan
-        if (selectedPaymentType === 'parca-ode') {
-          paymentData.shares = sum.map((amount, index) => ({
-            type: 'cash',
-            amount: parseFloat(amount),
-            customer_id: null,
-            items: mappedItems2(shares[index])
-          }));
-        } else {
-          paymentData.shares.push({
-            type:
-              selectedPaymentType === 'pesin'
-                ? 'cash'
-                : selectedPaymentType === 'bank-havale'
-                ? 'bank'
-                : 'customer_balance',
-            amount: parseFloat(discountedTotal.toFixed(2)),
-            customer_id: selectedCustomerId || null,
-            items: mappedItems2(shares[0])
-          });
-        }
-      } else {
-        // shares yoksa allItems üzerinden mappedItems kullan
-        if (selectedPaymentType === 'parca-ode') {
-          paymentData.shares = sum.map((amount) => ({
-            type: 'cash',
-            amount: parseFloat(amount),
-            customer_id: null,
-            items: mappedItems
-          }));
-        } else {
-          paymentData.shares.push({
-            type: selectedPaymentType === 'pesin' ? 'cash' : selectedPaymentType === 'bank-havale' ? 'bank' : 'customer_balance',
-            amount: parseFloat(discountedTotal.toFixed(2)),
-            customer_id: selectedCustomerId || null,
-            items: mappedItems
-          });
-        }
-      }
-      
-    
-      const order_id = orderID || orders[0]?.order_id;
+  const order_id = orderID || orders[0]?.order_id;
 
-      if (!order_id) {
-        alert('Order ID bulunamadı.');
-        return;
-      }
+  if (!order_id) {
+    alert('Order ID bulunamadı.');
+    return;
+  }
 
-      try {
-        await axios.post(`${base_url}/order/${order_id}/payments`, paymentData, getHeaders());
+  try {
+    await axios.post(`${base_url}/order/${order_id}/payments`, paymentData, getHeaders());
+    alert('Ödəniş uğurla icra olundu.');
+    navigate('/masalar');
+    window.location.reload();
+  } catch (error) {
+    if (
+      error.response &&
+      error.response.status === 403 &&
+      error.response.data.message === 'Forbidden'
+    ) {
+      setAccessDenied(true);
+    } else {
+      console.error('Error submitting payment:', error);
+      alert('Ödənişi emal edərkən xəta baş verdi.');
+    }
+  }
+};
 
-        alert('Ödəniş uğurla icra olundu.');
-        navigate('/masalar')
-        window.location.reload();
-      } catch (error) {
-        if (error.response && error.response.status === 403 && error.response.data.message === "Forbidden") {
-          setAccessDenied(true);
-        } else {
-          console.error('Error submitting payment:', error);
-          alert('Ödənişi emal edərkən xəta baş verdi.');
-        }
-      }
-    };
-    
-  if (accessDenied) return <AccessDenied onClose={setAccessDenied}/>;
+
+
+  if (accessDenied) return <AccessDenied onClose={setAccessDenied} />;
   return (
     <form onSubmit={handleSubmit}>
       <div className='border rounded bg-gray-50 m-4 p-3'>
@@ -252,7 +261,7 @@ if (orders && orders.length > 0) {
       <div className='border rounded bg-green-50 m-4 p-3'>
         <div className='flex items-center'>
           <div className='w-1/3 flex h-14 border rounded-l items-center px-2 bg-gray-100 gap-5'>
-          Artıq ödənilib
+            Artıq ödənilib
           </div>
           <input
             className='w-2/3 h-14 px-6 border border-l-0 rounded-r'
@@ -264,7 +273,7 @@ if (orders && orders.length > 0) {
       </div>
       <div className='border rounded bg-gray-50 m-4 p-3'>
         <div className='flex items-center'>
-        <div className='w-1/3 flex h-14 border rounded-l items-center px-2 bg-gray-100 gap-5'>
+          <div className='w-1/3 flex h-14 border rounded-l items-center px-2 bg-gray-100 gap-5'>
             İndirim (%)
           </div>
           <input
@@ -274,11 +283,11 @@ if (orders && orders.length > 0) {
             max="100"
             step="1"
             value={discount}
-            onChange={(e) => setDiscount(parseFloat(e.target.value) )}
+            onChange={(e) => setDiscount(parseFloat(e.target.value))}
           />
           <div className='w-1/3 flex h-14 border text-red-400 rounded-l items-center px-2 bg-gray-100 gap-5'>
-          Qalıq
-          </div> 
+            Qalıq
+          </div>
           <input
             className='w-2/3 h-14 px-6 border border-l-0 rounded-r'
             type='text'
@@ -385,7 +394,7 @@ if (orders && orders.length > 0) {
         </div>
       )}
 
-      <button className='block w-[calc(100%-32px)] bg-sky-600 font-medium mx-4 mb-1 py-2 px-4 rounded text-white'>
+      <button type='submit' className='block w-[calc(100%-32px)] bg-sky-600 font-medium mx-4 mb-1 py-2 px-4 rounded text-white'>
         Hesap kes
       </button>
     </form>
