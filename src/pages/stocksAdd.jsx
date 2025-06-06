@@ -36,42 +36,42 @@ function Stok() {
   const [groups, setGroups] = useState([]);
   const [editGroupid, setEditGroupid] = useState(null);
   const [items, setItems] = useState([]);
-    const [rawMaterials, setRawMaterials] = useState([]);
-       const [selectedRawMaterials, setSelectedRawMaterials] = useState([
-            { id: "", quantity: 1, name:"" },
-          ]);
-          console.log("selectedRawMaterials",selectedRawMaterials);
-          
-      const [formData, setFormData] = useState({
-        name: "",
-        stock_group_id: "",
-        image: null,
-        show_on_qr: false,
-        price: 0,
-        amount: 0,
-        alert_critical: false,
-        critical_amount: 1,
-        item_type: "sayilan",
-        additionalPrices: [],
-        description: "",
-      });
-  console.log("items",items);
-  
+  const [rawMaterials, setRawMaterials] = useState([]);
+  const [selectedRawMaterials, setSelectedRawMaterials] = useState([
+    { id: "", quantity: 1, name: "" },
+  ]);
+  console.log("selectedRawMaterials", selectedRawMaterials);
+
+  const [formData, setFormData] = useState({
+    name: "",
+    stock_group_id: "",
+    image: null,
+    show_on_qr: false,
+    price: 0,
+    amount: 0,
+    alert_critical: false,
+    critical_amount: 1,
+    item_type: "sayilan",
+    additionalPrices: [],
+    description: "",
+  });
+  console.log("items", items);
+
   const [accessDenied, setAccessDenied] = useState(false);
   const [ActiveUser, setActiveUser] = useState(false);
-  console.log("ActiveUser",ActiveUser);
-  
+  console.log("ActiveUser", ActiveUser);
 
-      useEffect(() => {
-          if (rawMaterials && rawMaterials.length > 0) {
-            const formatted = rawMaterials.map(raw => ({
-              id: String(raw.id),
-              quantity: parseFloat(raw.pivot?.quantity || '1'),
-              name: raw.name
-            }));
-            setSelectedRawMaterials(formatted);
-          }
-        }, [rawMaterials]);
+
+  useEffect(() => {
+    if (rawMaterials && rawMaterials.length > 0) {
+      const formatted = rawMaterials.map(raw => ({
+        id: String(raw.id),
+        quantity: parseFloat(raw.pivot?.quantity || '1'),
+        name: raw.name
+      }));
+      setSelectedRawMaterials(formatted);
+    }
+  }, [rawMaterials]);
 
   useEffect(() => {
     const fetchGroups = async () => {
@@ -97,7 +97,7 @@ function Stok() {
       }
     };
 
-    
+
 
     const fetchItems = async () => {
       try {
@@ -124,6 +124,7 @@ function Stok() {
     setDetailsItem(item);
     setShowDetails(true);
   };
+
 
   const handleDeleteItem = async () => {
     if (!detailsItem) return;
@@ -190,7 +191,7 @@ function Stok() {
       order_stop: item.order_stop ? item.order_stop.slice(0, 5) : null,
       show_on_qr: !item.show_on_qr,
     };
-  
+
     try {
       await axios.put(
         `${base_url}/stocks/${item.id}`,
@@ -206,8 +207,8 @@ function Stok() {
       console.error("Error updating item", error);
     }
   };
-  
-  
+
+
 
   const filteredItems =
     selectedCat === 0
@@ -252,7 +253,7 @@ function Stok() {
 
   useEffect(() => {
     const fetchRawMaterials = async () => {
-      if (detailsItem) { 
+      if (detailsItem) {
         try {
           const response = await axios.get(
             `${base_url}/stocks/${detailsItem.id}/raw-materials`,
@@ -275,7 +276,7 @@ function Stok() {
 
   return (
     <>
-    <ScreenPassword/>
+      <ScreenPassword />
       <Helmet>
         <title>Anbar | Smartcafe</title>
         <meta
@@ -285,12 +286,11 @@ function Stok() {
       </Helmet>
       <section className="p-4">
         <div className="rounded-t border flex flex-col md:flex-row items-center justify-between bg-[#fafbfc] py-2 px-3">
-       
+
           <button
             onClick={() => setAddStok(!addStok)}
-            className={`ml-auto py-2 px-4 rounded text-white ${
-              addStok ? "bg-gray-700" : "bg-green-600"
-            }`}
+            className={`ml-auto py-2 px-4 rounded text-white ${addStok ? "bg-gray-700" : "bg-green-600"
+              }`}
           >
             {addStok ? (
               <>
@@ -325,7 +325,7 @@ function Stok() {
         <div className="border border-t-0 bg-white py-3 px-3 flex flex-col md:flex-row gap-4">
           {!addStok ? (
             <>
-            
+
               <div className="w-full md:w-3/4">
                 <div className="flex flex-col md:flex-row items-center gap-3 mb-3">
                   <p className="my-2">
@@ -364,7 +364,7 @@ function Stok() {
                           key={item.id}
                           className={
                             item.alert_critical &&
-                            item.amount < item.critical_amount
+                              item.amount < item.critical_amount
                               ? "bg-red-200 animate-pulse"
                               : ""
                           }
@@ -443,35 +443,38 @@ function Stok() {
               }
             </p>
             <div className="  w-full md:w-1/2 lg:w-1/3">
-      {/* Mevcut içerik... */}
-      
-      <p className="mt-4 ">
-        <strong>Xammallar:</strong>
-      </p>
-      {rawMaterials.length > 0 ? (
-        selectedRawMaterials.map((material) => (
-          <div key={material.id} className="mt-2 flex gap-3">
-            <span className="font-medium">{material.name}</span> - 
-            <h1 className=" flex w-64">
-            Miqdar:
-            </h1>
-            <h1> {material.amount} {material.quantity || "ədəd"}</h1>
-       
-          </div>
-        ))
-      ) : (
-        <div className="text-gray-500 w-72">Heç bir xammal tapılmadı.</div>
-      )}
+              {/* Mevcut içerik... */}
 
- 
-    </div>
+              <p className="mt-4 ">
+                <strong>Xammallar:</strong>
+              </p>
+              {rawMaterials.length > 0 ? (
+                selectedRawMaterials.map((material) => (
+                  <div key={material.id} className="mt-2 flex gap-3">
+                    <span className="font-medium">{material.name}</span> -
+                    <h1 className=" flex w-64">
+                      Miqdar:
+                    </h1>
+                    <h1> {material.amount} {material.quantity || "ədəd"}</h1>
+
+                  </div>
+                ))
+              ) : (
+                <div className="text-gray-500 w-72">Heç bir xammal tapılmadı.</div>
+              )}
+
+
+            </div>
             <div className="flex flex-col md:flex-row gap-4 mt-4">
-              <button
-                className="bg-red-500 text-white px-4 py-2 rounded"
-                onClick={handleDeleteItem}
-              >
-                Sil
-              </button>
+              {detailsItem && (
+                <button
+                  className="bg-red-500 text-white px-4 py-2 rounded"
+                  onClick={handleDeleteItem}
+                >
+                  Sil
+                </button>
+              )}
+
               <button
                 className="bg-blue-600 text-white px-4 py-2 rounded"
                 onClick={() => handleEditItem(detailsItem)}

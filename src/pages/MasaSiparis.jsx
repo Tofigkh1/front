@@ -60,6 +60,7 @@ function MasaSiparis() {
   };
 
 
+  console.log(checkedItems,"checkedItemscheckedItemscheckedItemscheckedItems")
 
   console.log("stockSets", stockSets);
 
@@ -238,26 +239,6 @@ function MasaSiparis() {
   // const tableOrders = useSelector((state) => state.stocks.tableOrders);
   // const loading = useSelector((state) => state.stocks.loading);
   // const error = useSelector((state) => state.stocks.error);
-
-  const handleRemoveSet = async (setId, quantity) => {
-  try {
-    await axios.post(
-      `${base_url}/qr/${id}/order`,
-      {
-        stock_set_id: setId,
-        quantity: quantity || 1
-      },
-      getHeaders()
-    );
-    toast.info("Set azaltıldı");
-    fetchTableOrders();
-  } catch (error) {
-    console.error("Error removing set:", error);
-  }
-};
-
-
-
 
   console.log("tableData", allItems);
   console.log("orders", orders);
@@ -749,30 +730,33 @@ function MasaSiparis() {
          
             </tr>
           </thead>
-          <tbody>
-            ${checkedItems
-        ?.map(
-          (item, index) => `
-                  <tr>
-                    <td>${index + 1}</td>
-                    <td className=" py-2">
-                      ${item?.name}
-                      ${item?.detail_id?.unit
-              ? ` (${item?.detail_id?.unit})`
-              : ""
-            }
-                    </td>
-                  
-                    <td>${item.count ? item.count * item.quantity : item.quantity
-            }</td>
-                    <td>${item?.count ? item.quantity : 0}</td>
-                    <td>${item.customIngredient || "Yoxdur"}</td>
-                  
-                  </tr>
-                `
-        )
-        .join("")}
-          </tbody>
+         <tbody>
+  ${checkedItems
+    ?.map((item, index) => {
+      const isSet = item.type === "set";
+      const stockNames = isSet && Array.isArray(item.items)
+        ? `<ul style="margin-top: 4px; padding-left: 16px; font-size: 12px; color: #666;">
+            ${item.items.map(sub => `<li>${sub.stock_name}</li>`).join("")}
+          </ul>`
+        : "";
+
+      return `
+        <tr>
+          <td>${index + 1}</td>
+          <td class="py-2">
+            ${item?.name}
+            ${item?.detail_id?.unit ? ` (${item.detail_id.unit})` : ""}
+            ${stockNames}
+          </td>
+          <td>${item.count ? item.count * item.quantity : item.quantity}</td>
+          <td>${item?.count ? item.quantity : 0}</td>
+          <td>${item.customIngredient || "Yoxdur"}</td>
+        </tr>
+      `;
+    })
+    .join("")}
+</tbody>
+
         </table>
       </div>
       </body>
@@ -880,7 +864,7 @@ function MasaSiparis() {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleRemoveSet(item.id, item.quantity);
+                                  handleRemoveStock(item.id, item.quantity);
                                 }}
                                 className="bg-red-500 text-white py-1 px-1 rounded-l focus:outline-none"
                               >
@@ -952,12 +936,9 @@ function MasaSiparis() {
                             <div className="flex items-center">
                               <button
                                 onClick={() =>
-                                  handleRemoveStock(
-                                    item.id,
-                                    item?.pivot_id,
-                                    item.quantity,
-                                    true
-                                  )
+                               handleRemoveStock(item.id, item.quantity)
+
+                                  
                                 }
                                 className="bg-red-500 text-white text-lg py-1 px-2 rounded-l focus:outline-none"
                               >
@@ -986,9 +967,9 @@ function MasaSiparis() {
                           <td className="p-2">
                             <div className="flex items-center">
                               <button
-                                onClick={() => handleRemoveSet(item.id, item.pivot?.id, item.quantity)}
+                                onClick={() => handleRemoveStock(item.id, item.quantity)}
 
-                                className="bg-red-500 text-white py-1 px-1 rounded-l focus:outline-none"
+                                className="bg-red-900 text-white py-1 px-1 rounded-l focus:outline-none"
                               >
                                 -
                               </button>
@@ -1365,25 +1346,37 @@ function MasaSiparis() {
               </thead>
               <tbody>
                 {checkedItems?.map((item, index) => (
-                  <tr key={index} className="border-t">
-                    <td className="px-4 py-2">
-                      {item?.name}
-                      {item?.detail_id?.unit && ` (${item?.detail_id?.unit})`}
-                    </td>
+  <React.Fragment key={index}>
+    <tr className="border-t">
+      <td className="px-4 py-2 align-top">
+        <div>
+          <span className="font-semibold">{item?.name}</span>
+          {item?.detail_id?.unit && ` (${item?.detail_id?.unit})`}
+        </div>
 
-                    <td className="px-4 py-2">
-                      <input
-                        type="text"
-                        placeholder="Xüsusi inqrediyent daxil edin"
-                        value={item.customIngredient || ""}
-                        onChange={(e) =>
-                          handleIngredientChange(index, e.target.value)
-                        }
-                        className="border rounded w-full px-2 py-1"
-                      />
-                    </td>
-                  </tr>
-                ))}
+        {/* Set tipində isə altına stock_name-ləri yazdır */}
+        {item?.type === "set" && Array.isArray(item.items) && (
+          <ul className="ml-4 list-disc text-sm text-gray-600">
+            {item.items.map((subItem, subIdx) => (
+              <li key={subIdx}>{subItem.stock_name}</li>
+            ))}
+          </ul>
+        )}
+      </td>
+
+      <td className="px-4 py-2">
+        <input
+          type="text"
+          placeholder="Xüsusi inqrediyent daxil edin"
+          value={item.customIngredient || ""}
+          onChange={(e) => handleIngredientChange(index, e.target.value)}
+          className="border rounded w-full px-2 py-1"
+        />
+      </td>
+    </tr>
+  </React.Fragment>
+))}
+
               </tbody>
             </table>
 
