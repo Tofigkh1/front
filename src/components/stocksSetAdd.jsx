@@ -87,6 +87,8 @@ console.log("selectedStocks",selectedStocks);
   const [groups, setGroups] = useState([]);
   const [accessDenied, setAccessDenied] = useState(false);
   const [rawMaterials, setRawMaterials] = useState([]);
+  const [image, setImage] = useState(null);
+
   
   const [selectedRawMaterials, setSelectedRawMaterials] = useState([
     { id: "", quantity: 1 },
@@ -154,36 +156,37 @@ const removeStockField = (index) => {
 
 const handleSubmit = async (e) => {
   e.preventDefault();
+const formDataToSend = new FormData();
+formDataToSend.append("name", formData.name);
+formDataToSend.append("price", formData.price || "");
 
-  // FormData yerine normal JSON objesi kullanalım
-  const payload = {
-    name: formData.name,
-    price: formData.price ? parseFloat(formData.price) : null, // Sayıya çevir
-    stocks: selectedStocks
-      .filter(stock => stock.id) // Boş seçimleri filtrele
-      .map(stock => ({
-        id: parseInt(stock.id), // Sayıya çevir
-        quantity: parseInt(stock.quantity) // Sayıya çevir
-      }))
-  };
+if (image) {
+  formDataToSend.append("image", image);
+}
 
-  console.log("payload",payload);
-  
-  // Boş stok göndermeyi önle
-  if(payload.stocks.length === 0) {
-    alert("En az bir stok seçmelisiniz!");
-    return;
-  }
+// ✅ FormData içində stocks array-i düzgün şəkildə əlavə et
+selectedStocks
+  .filter(stock => stock.id)
+  .forEach((stock, index) => {
+    formDataToSend.append(`stocks[${index}][id]`, stock.id);
+    formDataToSend.append(`stocks[${index}][quantity]`, stock.quantity);
+  });
 
-  try {
-    const response = await axios.post(`${base_url}/stock-sets`, payload, getAuthHeaders());
-    console.log("response",response);
-    
-    setAddStok(false);
-  } catch (error) {
-    console.error("Error creating stock set:", error.response.data); // Detaylı hata
-    alert(`Hata: ${error.response.data.message}`); // Kullanıcıya göster
-  }
+try {
+  const response = await axios.post(`${base_url}/stock-sets`, formDataToSend, {
+    headers: {
+      ...getAuthHeaders().headers,
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  console.log("response", response);
+  setAddStok(false);
+} catch (error) {
+  console.error("Error creating stock set:", error.response?.data || error.message);
+  alert(`Hata: ${error.response?.data?.message || "Şəkil və ya məlumat göndərilmədi"}`);
+}
+
+
 };
 
   const fetchData = async () => {
@@ -217,7 +220,31 @@ const handleSubmit = async (e) => {
       className="flex flex-col md:flex-row gap-4 w-full"
     >
       <div className="bg-gray-50 rounded border p-3 w-full md:w-1/2">
-        {/* Image Upload */}
+        <div className="mb-5">
+  <label className="block text-sm font-semibold mb-2">Şəkil əlavə et</label>
+  <input
+    type="file"
+    accept="image/*"
+    onChange={(e) => {
+      const file = e.target.files[0];
+      if (file) {
+        setImage(file);
+      }
+    }}
+    className="border rounded py-2 px-3 w-full"
+  />
+
+  {image && (
+    <div className="mt-3">
+      <img
+        src={URL.createObjectURL(image)}
+        alt="Preview"
+        className="h-32 object-cover rounded"
+      />
+    </div>
+  )}
+</div>
+
     
 
         {/* Other Form Fields */}

@@ -140,6 +140,9 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { addItem } from "../redux/basketSlice";
+import { Img } from "react-image";
+import { base_url, img_url } from "../api/index";
+
 
 const MenuItemPopup = ({ item, onClose, onCloseModal, onCloseClick }) => {
   console.log("itemloglama",item);
@@ -195,28 +198,37 @@ const MenuItemPopup = ({ item, onClose, onCloseModal, onCloseClick }) => {
 
             {Array.isArray(item.stocks) && item.stocks.length > 0 && (
     <div className="mt-4">
-      <h4 className="text-md font-semibold mb-2">Set Məlumatları</h4>
-      <table className="w-full text-left border-collapse text-sm">
-        <thead>
-       
-        </thead>
-        <tbody>
-          {item.stocks.map((stock) => (
-            <tr key={stock.id} className="hover:bg-gray-100">
-              <td className="px-1 py-2 border">
-                <img
-                  src={stock.image}
-              alt="img"
-                  className="w-12 h-12 object-cover rounded"
-                />
-              </td>
-              <td className="px-2 py-2 border">{stock.name}</td>
-              <td className="px-4 py-2 border">{stock.pivot?.quantity ?? "0"}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+  <h4 className="text-md font-semibold mb-2">Set Məlumatları</h4>
+  <table className="w-full text-left border-collapse text-sm">
+    <thead>
+      <tr className="bg-gray-200">
+        <th className="px-1 py-2 border">Şəkil</th>
+        <th className="px-2 py-2 border">Ad</th>
+        <th className="px-4 py-2 border">Say</th>
+      </tr>
+    </thead>
+    <tbody>
+      {item.stocks.map((stock) => (
+        <tr key={stock.id} className="hover:bg-gray-100">
+          <td className="px-1 py-2 border">
+            <Img
+              src={
+                stock.image
+                  ? `${img_url}/${stock.image}`
+                  : "/placeholder-image.jpg"
+              }
+              alt={stock.name}
+              className="w-24 h-16 object-cover rounded-md mx-auto"
+            />
+          </td>
+          <td className="px-2 py-2 border">{stock.name}</td>
+          <td className="px-4 py-2 border">{stock.pivot?.quantity ?? "0"}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
   )}
 
           {/* Details'i map ile göster */}

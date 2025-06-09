@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import AccessDenied from './AccessDenied';
-import { base_url,img_url } from '../api/index';
+import { base_url, img_url } from '../api/index';
 // import { FaTrash } from 'react-icons/fa';
 
 const getAuthHeaders = () => {
@@ -18,21 +18,22 @@ const getAuthHeaders = () => {
     };
 };
 
-const EditStok = ({ item, onClose, onUpdate,rawMaterials,detailsItem }) => {
-    console.log("rawMaterials",rawMaterials);
+const EditStok = ({ item, onClose, onUpdate, rawMaterials, detailsItem }) => {
+    console.log("rawMaterials", rawMaterials);
 
 
     useEffect(() => {
         if (rawMaterials && rawMaterials.length > 0) {
-          const formatted = rawMaterials.map(raw => ({
-            id: String(raw.id),
-            quantity: parseFloat(raw.pivot?.quantity || '1')
-          }));
-          setSelectedRawMaterials(formatted);
+            const formatted = rawMaterials.map(raw => ({
+  id: String(raw.id),
+  quantity: parseFloat(raw.pivot?.quantity || '1')
+}));
+
+            setSelectedRawMaterials(formatted);
         }
-      }, [rawMaterials]);
-      
-    
+    }, [rawMaterials]);
+
+
     const [formData, setFormData] = useState({
         name: '',
         amount: '',
@@ -47,53 +48,53 @@ const EditStok = ({ item, onClose, onUpdate,rawMaterials,detailsItem }) => {
     const [groups, setGroups] = useState([]);
     const [accessDenied, setAccessDenied] = useState(false);
 
-      const [rawMaterialss, setRawMaterialss] = useState([]);
-      
-      const [selectedRawMaterials, setSelectedRawMaterials] = useState([
+    const [rawMaterialss, setRawMaterialss] = useState([]);
+
+    const [selectedRawMaterials, setSelectedRawMaterials] = useState([
         { id: "", quantity: 1 },
-      ]);
-      
-      const handleRawMaterialChange = (index, field, value) => {
+    ]);
+
+    const handleRawMaterialChange = (index, field, value) => {
         const updated = [...selectedRawMaterials];
         updated[index][field] = value;
         setSelectedRawMaterials(updated);
-      };
-      
+    };
+
     //   const addRawMaterialField = () => {
     //     setSelectedRawMaterials([...selectedRawMaterials, { id: "", quantity: 1 }]);
     //   };
-      
+
     //   const removeRawMaterialField = (index) => {
     //     const updated = selectedRawMaterials.filter((_, i) => i !== index);
     //     setSelectedRawMaterials(updated);
     //   };
 
 
-      const fetchData = async () => {
+    const fetchData = async () => {
         try {
-          const token = localStorage.getItem("token");
-          const response = await axios.get(`${base_url}/raw-materials`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          console.log("response",response);
-          
-          setRawMaterialss(response.data.data);
-        } catch (error) {
-          console.error("Error fetching raw materials:", error);
-        }
-      };
+            const token = localStorage.getItem("token");
+            const response = await axios.get(`${base_url}/raw-materials`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            console.log("response", response);
 
-        useEffect(() => {
-          fetchData();
-        }, []);
-    
+            setRawMaterialss(response.data.data);
+        } catch (error) {
+            console.error("Error fetching raw materials:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
 
     useEffect(() => {
         if (item) {
-         
-                setFormData({
+
+            setFormData({
                 name: item.name,
                 amount: item.amount,
                 price: item.price,
@@ -104,7 +105,7 @@ const EditStok = ({ item, onClose, onUpdate,rawMaterials,detailsItem }) => {
                 // order_start: item.order_start.slice(0,5) || '00:00',
                 // order_stop: item.order_stop.slice(0,5) || "24:00"
             });
-           
+
         }
     }, [item]);
 
@@ -117,7 +118,7 @@ const EditStok = ({ item, onClose, onUpdate,rawMaterials,detailsItem }) => {
                 console.error('Error fetching groups', error);
             }
         };
-        
+
         fetchGroups();
     }, []);
 
@@ -132,15 +133,15 @@ const EditStok = ({ item, onClose, onUpdate,rawMaterials,detailsItem }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-     
+
 
         const updatedFormData = {
-            
+
             ...formData,
-          
+
         };
 
-        
+
 
         try {
             await axios.put(`${base_url}/stocks/${item.id}`, updatedFormData, getAuthHeaders());
@@ -156,29 +157,32 @@ const EditStok = ({ item, onClose, onUpdate,rawMaterials,detailsItem }) => {
 
 
         try {
-          
+
             const token = localStorage.getItem("token");
 
-    
+
             // Sonra hammaddeleri güncelle
             const payload = {
-                raw_materials: selectedRawMaterials.map(material => ({
-                    id: parseInt(material.id), // backend integer bekliyorsa
-                    quantity: parseFloat(material.quantity),
-                })),
-            };
-    console.log("payload",payload);
-    
+  raw_materials: selectedRawMaterials
+    .filter(mat => mat.id && !isNaN(mat.id) && mat.quantity && !isNaN(mat.quantity))
+    .map(mat => ({
+      id: Number(mat.id),           // Must match raw_material.id, not stock.id
+      quantity: Number(mat.quantity),
+    }))
+};
+
+            console.log("payload", payload);
+
             await axios.put(
                 `${base_url}/stocks/${detailsItem.id}/raw-materials`,
                 payload,
                 {
                     headers: {
-                      Authorization: `Bearer ${token}`,
+                        Authorization: `Bearer ${token}`,
                     },
-                  }
+                }
             );
-    
+
             onUpdate(); // Listeyi yenile
             onClose();  // Popup'u kapat
         } catch (error) {
@@ -193,6 +197,8 @@ const EditStok = ({ item, onClose, onUpdate,rawMaterials,detailsItem }) => {
             }
         }
     };
+    console.log("Göndərilən raw_materials:",rawMaterialss);
+
 
     if (accessDenied) return <AccessDenied onClose={setAccessDenied} />;
 
@@ -260,42 +266,54 @@ const EditStok = ({ item, onClose, onUpdate,rawMaterials,detailsItem }) => {
                     </div>
 
                     <div>
-                    {selectedRawMaterials.map((material, index) => (
-  <div key={index} className="flex gap-2 mb-2">
-    <select
-      className="border rounded py-2 px-3 w-full text-sm font-medium"
-      value={material.id}
-      onChange={(e) => handleRawMaterialChange(index, "id", e.target.value)}
-      required
-    >
-   
-      {rawMaterialss.map((raw) => (
-        <option key={raw.id} value={raw.id}>
-          {raw.name}
-        </option>
-      ))}
-    </select>
-    <input
-      className="border rounded py-2 px-3 w-full text-sm font-medium"
-      type="number"
-      step="0.01"
-      value={material.quantity}
-      onChange={(e) =>
-        handleRawMaterialChange(index, "quantity", e.target.value)
-      }
-      required
-    />
-    {/* <button
-      type="button"
-      onClick={() => removeRawMaterialField(index)}
-      className="text-red-500"
-    >
-      <FaTrash />
-    </button> */}
-  </div>
-))}
+  {selectedRawMaterials.map((material, index) => (
+    <div key={index} className="flex flex-col items-center gap-2 mb-2">
+      <div className="w-full font-medium">Xammal</div>
+      <div className="flex items-center gap-2 mb-2 w-full">
+        <select
+          className="border rounded py-2 px-3 w-full text-sm font-medium"
+          value={material.id}
+          onChange={(e) => handleRawMaterialChange(index, "id", e.target.value)}
+          required
+        >
+          <option value="">Seçin</option>
+          {rawMaterialss.map((raw) => (
+            <option key={raw.id} value={raw.id}>
+              {raw.name}
+            </option>
+          ))}
+        </select>
+        <input
+          className="border rounded py-2 px-3 w-full text-sm font-medium"
+          type="number"
+          step="0.01"
+          value={material.quantity}
+          onChange={(e) =>
+            handleRawMaterialChange(index, "quantity", e.target.value)
+          }
+          required
+        />
+      </div>
+    </div>
+  ))}
 
-                    </div>
+  {/* Yeni xammal əlavə et düyməsi */}
+  <div className="mb-4 flex justify-start">
+    <button
+      type="button"
+      onClick={() =>
+        setSelectedRawMaterials([
+          ...selectedRawMaterials,
+          { id: "", quantity: 1 },
+        ])
+      }
+      className="text-sm text-blue-600 underline hover:text-blue-800"
+    >
+      + Yeni xammal əlavə et
+    </button>
+  </div>
+</div>
+
 
                     <div className="mb-4">
                         <label className="inline-flex items-center">
@@ -323,7 +341,7 @@ const EditStok = ({ item, onClose, onUpdate,rawMaterials,detailsItem }) => {
                             <span className="ml-2">QR Menüde Göster</span>
                         </label>
                     </div>
-                    
+
                     <div className="mb-4">
                         <label className="block text-sm font-medium mb-2" htmlFor="stock_group_id">Grup</label>
                         <select

@@ -60,7 +60,7 @@ function MasaSiparis() {
   };
 
 
-  console.log(checkedItems,"checkedItemscheckedItemscheckedItemscheckedItems")
+  console.log(checkedItems, "checkedItemscheckedItemscheckedItemscheckedItems")
 
   console.log("stockSets", stockSets);
 
@@ -84,7 +84,7 @@ function MasaSiparis() {
   const fetchStockSets = async () => {
     try {
       const response = await axios.get(`${base_url}/stock-sets`, getHeaders());
-      setStockSets( response.data);
+      setStockSets(response.data);
     } catch (error) {
       console.error("Error loading stock sets:", error);
     }
@@ -576,8 +576,22 @@ function MasaSiparis() {
                     <tr key="${item.id}">
                     <td>${index + 1}</td>
                     <td>
-                    ${item.name} <br/>${item?.count ? `${item.unit || ""}` : ""}
-                  </td>
+  ${item.name}
+  ${item.type === "set"
+              ? `<ul style="margin:0;padding-left:10px;">
+          ${item.items
+                .map(
+                  (sub) =>
+                    `<li style="list-style-type:none;">${sub.stock_name} (${sub.quantity})</li>`
+                )
+                .join("")}
+        </ul>`
+              : item?.count
+                ? `<br/>${item.unit || ""}`
+                : ""
+            }
+</td>
+
                   
                       <td>${item.count ? item.count * item.quantity : item.quantity
             }</td>
@@ -732,15 +746,15 @@ function MasaSiparis() {
           </thead>
          <tbody>
   ${checkedItems
-    ?.map((item, index) => {
-      const isSet = item.type === "set";
-      const stockNames = isSet && Array.isArray(item.items)
-        ? `<ul style="margin-top: 4px; padding-left: 16px; font-size: 12px; color: #666;">
+        ?.map((item, index) => {
+          const isSet = item.type === "set";
+          const stockNames = isSet && Array.isArray(item.items)
+            ? `<ul style="margin-top: 4px; padding-left: 16px; font-size: 12px; color: #666;">
             ${item.items.map(sub => `<li>${sub.stock_name}</li>`).join("")}
           </ul>`
-        : "";
+            : "";
 
-      return `
+          return `
         <tr>
           <td>${index + 1}</td>
           <td class="py-2">
@@ -753,8 +767,8 @@ function MasaSiparis() {
           <td>${item.customIngredient || "Yoxdur"}</td>
         </tr>
       `;
-    })
-    .join("")}
+        })
+        .join("")}
 </tbody>
 
         </table>
@@ -774,6 +788,43 @@ function MasaSiparis() {
   };
   console.log("orderDetails", orderDetails);
 
+  const handleManualQuantityChange = async (item, newQuantity) => {
+    const currentQuantity = item.quantity;
+    const difference = newQuantity - currentQuantity;
+
+    if (difference === 0) return;
+
+    try {
+      if (difference > 0) {
+        // Əlavə et
+        await axios.post(
+          `${base_url}/tables/${id}/add-stock`,
+          {
+            stock_id: item.id,
+            quantity: difference,
+            detail_id: item?.pivot_id || null,
+          },
+          getHeaders()
+        );
+      } else {
+        // Çıxart
+        await axios.post(
+          `${base_url}/tables/${id}/subtract-stock`,
+          {
+            stock_id: item.id,
+            quantity: Math.abs(difference),
+            pivotId: item?.pivot_id || null,
+            increase: false,
+          },
+          getHeaders()
+        );
+      }
+
+      fetchTableOrders(); // input yeniləmə
+    } catch (error) {
+      console.error("Miqdar dəyişdirilərkən xəta baş verdi:", error);
+    }
+  };
 
 
 
@@ -866,15 +917,15 @@ function MasaSiparis() {
                                   e.stopPropagation();
                                   handleRemoveStock(item.id, item.quantity);
                                 }}
-                                className="bg-red-500 text-white py-1 px-1 rounded-l focus:outline-none"
+                                className="bg-red-500 text-white py-1 px-2 rounded-l focus:outline-none"
                               >
                                 -
                               </button>
                               <input
                                 type="number"
                                 value={item.quantity}
-                                className="border-t border-b py-1 text-center w-16 text-lg"
                                 readOnly
+                                className="border-t border-b py-1 text-center w-16 text-lg"
                               />
                               <button
                                 onClick={(e) => {
@@ -897,6 +948,10 @@ function MasaSiparis() {
                           >
                             <i className="fa-solid fa-trash-can"></i>
                           </td>
+                          <td className="p-5 font-bold flex items-center gap-2">
+                            <i className={`fa-solid ${openRows[item.id] ? 'fa-chevron-down' : 'fa-chevron-right'} text-sm`}></i>
+                          </td>
+
                         </tr>
 
                         {/* Alt satır sadece açıkken gösterilir */}
@@ -934,30 +989,27 @@ function MasaSiparis() {
                           </td>
                           <td className="p-2">
                             <div className="flex items-center">
-                              <button
-                                onClick={() =>
-                               handleRemoveStock(item.id, item.quantity)
+                              <div className="flex items-center">
+                                <button
+                                  onClick={() => handleRemoveStock2(item.id, item.quantity)}
+                                  className="bg-red-500 text-white py-1 px-2 rounded-l text-base focus:outline-none"
+                                >
+                                  -
+                                </button>
+                                <input
+                                  type="text"
+                                  value={item.quantity}
+                                  className="border-t border-b py-1 px-2 text-center w-12 text-base"
 
-                                  
-                                }
-                                className="bg-red-500 text-white text-lg py-1 px-2 rounded-l focus:outline-none"
-                              >
-                                -
-                              </button>
-                              <input
-                                type="number"
-                                value={item.quantity}
-                                className="border-t border-b py-1 px-2 text-center w-10 text-lg"
-                                readOnly
-                              />
-                              <button
-                                onClick={() => {
-                                  handleAddStock(item.id, item?.detail_id);
-                                }}
-                                className="bg-green-500 text-lg text-white py-1 px-2 rounded-r focus:outline-none"
-                              >
-                                +
-                              </button>
+                                />
+                                <button
+                                  onClick={() => handleAddStock(item.id, item?.detail_id)}
+                                  className=" bg-green-500 text-white py-1 px-2 rounded-r text-base focus:outline-none"
+                                >
+                                  +
+                                </button>
+                              </div>
+
                             </div>
                           </td>
                         </>
@@ -966,19 +1018,32 @@ function MasaSiparis() {
                           <td className="p-5">{item.name}</td>
                           <td className="p-2">
                             <div className="flex items-center">
-                              <button
-                                onClick={() => handleRemoveStock(item.id, item.quantity)}
+                             <button
+  onClick={() => {
+    const newQuantity = item.quantity - 1;
+    if (newQuantity >= 0) {
+      handleManualQuantityChange(item, newQuantity);
+    }
+  }}
+  className="bg-red-500 text-white py-1 px-2 rounded-l focus:outline-none"
+>
+  -
+</button>
 
-                                className="bg-red-900 text-white py-1 px-1 rounded-l focus:outline-none"
-                              >
-                                -
-                              </button>
                               <input
                                 type="number"
                                 value={item.quantity}
-                                className="border-t border-b py-1 text-center w-16 text-lg"
+                                min={0}
                                 readOnly
+                                onChange={(e) => {
+                                  const newQuantity = parseInt(e.target.value);
+                                  if (!isNaN(newQuantity) && newQuantity >= 0) {
+                                    handleManualQuantityChange(item, newQuantity);
+                                  }
+                                }}
+                                className="border-t border-b py-1 px-2 text-center w-16 text-lg"
                               />
+
                               <button
                                 onClick={() => handleAddStock(item.id)}
                                 className="bg-green-500 text-white py-1 px-2 rounded-r focus:outline-none"
@@ -1346,36 +1411,36 @@ function MasaSiparis() {
               </thead>
               <tbody>
                 {checkedItems?.map((item, index) => (
-  <React.Fragment key={index}>
-    <tr className="border-t">
-      <td className="px-4 py-2 align-top">
-        <div>
-          <span className="font-semibold">{item?.name}</span>
-          {item?.detail_id?.unit && ` (${item?.detail_id?.unit})`}
-        </div>
+                  <React.Fragment key={index}>
+                    <tr className="border-t">
+                      <td className="px-4 py-2 align-top">
+                        <div>
+                          <span className="font-semibold">{item?.name}</span>
+                          {item?.detail_id?.unit && ` (${item?.detail_id?.unit})`}
+                        </div>
 
-        {/* Set tipində isə altına stock_name-ləri yazdır */}
-        {item?.type === "set" && Array.isArray(item.items) && (
-          <ul className="ml-4 list-disc text-sm text-gray-600">
-            {item.items.map((subItem, subIdx) => (
-              <li key={subIdx}>{subItem.stock_name}</li>
-            ))}
-          </ul>
-        )}
-      </td>
+                        {/* Set tipində isə altına stock_name-ləri yazdır */}
+                        {item?.type === "set" && Array.isArray(item.items) && (
+                          <ul className="ml-4 list-disc text-sm text-gray-600">
+                            {item.items.map((subItem, subIdx) => (
+                              <li key={subIdx}>{subItem.stock_name}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </td>
 
-      <td className="px-4 py-2">
-        <input
-          type="text"
-          placeholder="Xüsusi inqrediyent daxil edin"
-          value={item.customIngredient || ""}
-          onChange={(e) => handleIngredientChange(index, e.target.value)}
-          className="border rounded w-full px-2 py-1"
-        />
-      </td>
-    </tr>
-  </React.Fragment>
-))}
+                      <td className="px-4 py-2">
+                        <input
+                          type="text"
+                          placeholder="Xüsusi inqrediyent daxil edin"
+                          value={item.customIngredient || ""}
+                          onChange={(e) => handleIngredientChange(index, e.target.value)}
+                          className="border rounded w-full px-2 py-1"
+                        />
+                      </td>
+                    </tr>
+                  </React.Fragment>
+                ))}
 
               </tbody>
             </table>
