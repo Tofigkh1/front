@@ -213,70 +213,68 @@ const NewOrders = () => {
                         )}
                         
                         {/* If a table is selected, show its orders */}
-                     {selectedTable && (
-                <div>
-                    {/* ... (mevcut kodlar) */}
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                        {tables.find(t => t.id === selectedTable)?.table_orders.map(tableOrder => {
-                            const orderItems = getOrderItems(tableOrder.order);
-                            
-                            return (
-                                <div key={tableOrder.id} className="border border-gray-200 rounded-lg p-4 flex flex-col items-center bg-white shadow-sm">
-                                    <div className="w-full">
-                                        {orderItems.map((item, index) => (
-                                            <div key={`${item.id}-${index}`} className="mb-4 last:mb-0">
-                                                {item.image && (
-                                                    <img
-                                                        src={`${img_url}/${item.image}`}
-                                                        alt={item.name}
-                                                        className="my-2 max-w-full h-auto rounded-md mx-auto"
-                                                    />
-                                                )}
-                                                <p className="text-lg font-medium mb-1 text-center">
-                                                    {item.name} ({item.type === 'set' ? 'Set' : 'Məhsul'})
-                                                </p>
-                                                <p className="text-gray-600 text-center">
-                                                    Miqdar: {item.pivot.quantity}
-                                                </p>
-                                                <p className="text-gray-600 text-center">
-                                                    Qiymət: {item.type === 'set' ? item.unit_price : item.price} ₼
-                                                </p>
-                                                <p className="text-gray-600 text-center">
-                                                    Toplam: {(
-                                                        Number(item.pivot.quantity) * 
-                                                        Number(item.type === 'set' ? item.unit_price : item.price)
-                                                    ).toFixed(2)} ₼
-                                                </p>
-                                                {item.detail?.unit && (
-                                                    <p className="text-gray-600 text-center">
-                                                        Detalı: {item.detail.unit}
-                                                    </p>
-                                                )}
+                        {selectedTable && (
+                            <div>
+                                <button 
+                                    onClick={() => setSelectedTable(null)}
+                                    className="mb-4 flex items-center text-blue-500 hover:text-blue-700"
+                                >
+                                    <span className="mr-2">←</span> Masalara qayıt
+                                </button>
+                                
+                                <h3 className="text-xl font-semibold mb-4">
+                                    {tables.find(t => t.id === selectedTable)?.name} - Sifarişlər
+                                </h3>
+                                
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                                    {tables.find(t => t.id === selectedTable)?.table_orders.map(tableOrder => (
+                                        <div key={tableOrder.id} className="border border-gray-200 rounded-lg p-4 flex flex-col items-center bg-white shadow-sm">
+                                            {tableOrder.order.stocks[0]?.image && (
+                                                <img
+                                                    src={`${img_url}/${tableOrder.order.stocks[0]?.image}`}
+                                                    alt={tableOrder.order.stocks[0]?.name}
+                                                    className="my-2 max-w-full h-auto rounded-md"
+                                                />
+                                            )}
+                                            <p className="text-lg font-medium mb-1">{tableOrder.order.stocks[0]?.name}</p>
+                                            <p className="text-gray-600">Mikdar: {tableOrder.order.stocks[0]?.pivot.quantity}</p>
+         <p className="text-gray-600">
+  Toplam: {
+    (
+      Number(tableOrder?.order?.stocks?.[0]?.pivot?.quantity || 0) *
+      Number(tableOrder?.order?.stocks?.[0]?.price || 0)
+    ).toFixed(2)
+  } ₼
+</p>
+
+
+
+
+                                            {tableOrder.order.stocks[0] && (
+  <p className="text-gray-600 flex gap-2">
+  <h1 className=' '>Detalı:</h1>  {tableOrder.order.stocks[0].detail?.unit} 
+    
+  </p>
+)}
+                                            <div className="mt-4 flex space-x-4">
+                                                <button
+                                                    onClick={() => handleOrderAction(tableOrder.id, 'accept', tableOrder.order.stocks[0]?.pivot?.detail_id ,tableOrder)}
+                                                    className="bg-green-500 text-white py-1 px-4 rounded-md shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
+                                                >
+                                                    Təsdiq edin
+                                                </button>
+                                                <button
+                                                    onClick={() => handleOrderAction(tableOrder.id, 'reject')}
+                                                    className="bg-red-500 text-white py-1 px-4 rounded-md shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+                                                >
+                                                    Ləğv edin
+                                                </button>
                                             </div>
-                                        ))}
-                                    </div>
-                                    
-                                    <div className="mt-4 flex space-x-4">
-                                        <button
-                                            onClick={() => handleOrderAction(tableOrder.id, 'accept', null, tableOrder)}
-                                            className="bg-green-500 text-white py-1 px-4 rounded-md shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
-                                        >
-                                            Təsdiq edin
-                                        </button>
-                                        <button
-                                            onClick={() => handleOrderAction(tableOrder.id, 'reject')}
-                                            className="bg-red-500 text-white py-1 px-4 rounded-md shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
-                                        >
-                                            Ləğv edin
-                                        </button>
-                                    </div>
+                                        </div>
+                                    ))}
                                 </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

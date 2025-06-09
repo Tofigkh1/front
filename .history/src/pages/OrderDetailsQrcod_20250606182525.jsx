@@ -849,53 +849,49 @@ const fetchStockSets = async () => {
   console.log("basketItemsRedux",basketItems);
 
   
-const handleConfirmOrder = async (item, quantity) => {
-  try {
-    // Seçilen öğenin bir set mi yoksa normal stok mu olduğunu kontrol et
-    const isSet = stockSets.some(set => set.id === item.id);
+  const handleConfirmOrder = async (item, quantity) => {
+ console.log("item",item);
+ 
     
-    const orderData = isSet
-      ? {
-          stock_sets: [
-            {
-              stock_set_id: item.id,
-              quantity: quantity,
-              detail_id: item.details || null 
-            }
-          ]
-        }
-      : {
-          stocks: [
-            {
-              stock_id: item.id,
-              quantity: quantity,
-              detail_id: item.detail_id || null 
-            }
-          ]
-        };
-
-    console.log("orderData", orderData);
-    
-    const response = await axios.post(
-      `${base_url}/qr/${token}/order`,
-      orderData,
-      getAuthHeaders()
-    );
-    
-    console.log("Order submitted successfully:", response.data);
-    setPendingOrders(prevOrders => [...prevOrders, orderData]);
-    window.location.reload();
-    
-  } catch (error) {
-    if (error.response && error.response.status === 400) {
-      setQrcodedontOrder(true);
-    } else {
-      console.error("Error submitting order:", error);
+    try {
+      // const orderData = {
+      //   stocks: [
+      //     {
+      //       stock_id: item.id,
+      //       quantity: quantity,
+      //       detail_id: item.detail_id || null 
+      //     }
+      //   ]
+      // };
+   const orderData = {
+        sets: [
+          {
+            stock_id: item.id,
+            quantity: quantity,
+            detail_id: item.details || null 
+          }
+        ]
+      };
+  console.log("orderData",orderData);
+      const response = await axios.post(
+        `${base_url}/qr/${token}/order`,
+        orderData,
+        getAuthHeaders()
+      );
+      console.log("itembasketapply",item);
+      console.log("Order submitted successfully:", response.data);
+      setPendingOrders(prevOrders => [...prevOrders, orderData]);
+      window.location.reload();
+    } catch (error) {
+      if (error.response && error.response.status === 400) {
+        setQrcodedontOrder(true);
+      } else {
+        console.error("Error submitting order:", error);
+      }
+    } finally {
+      setSelectedItem(null);
     }
-  } finally {
-    setSelectedItem(null);
-  }
-};
+  };
 
 
   if (QrcodedontOrde)
@@ -1079,17 +1075,7 @@ const handleConfirmOrder = async (item, quantity) => {
 )}
 
  
-{openClick && openClickModal && (
-  basketItems.map((item, index) => (
-    <BasketOrders
-      key={index} // map kullanırken her zaman key eklemelisin
-      onCloseModal={() => setOpenClickModal(false)} // Modalı kapatma fonksiyonu
-      items={basketItems} // Tüm sepet öğelerini aktarıyoruz
-      onClose={() => setOpenClick(false)} // Ana popup'u kapatma fonksiyonu
-      onConfirm={handleConfirmOrder} // Siparişi onaylama fonksiyonu
-    />
-  ))
-)}
+
 
 {selectedItem && (
           <MenuItemPopup

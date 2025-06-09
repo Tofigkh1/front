@@ -849,53 +849,49 @@ const fetchStockSets = async () => {
   console.log("basketItemsRedux",basketItems);
 
   
-const handleConfirmOrder = async (item, quantity) => {
-  try {
-    // Seçilen öğenin bir set mi yoksa normal stok mu olduğunu kontrol et
-    const isSet = stockSets.some(set => set.id === item.id);
+  const handleConfirmOrder = async (item, quantity) => {
+ console.log("item",item);
+ 
     
-    const orderData = isSet
-      ? {
-          stock_sets: [
-            {
-              stock_set_id: item.id,
-              quantity: quantity,
-              detail_id: item.details || null 
-            }
-          ]
-        }
-      : {
-          stocks: [
-            {
-              stock_id: item.id,
-              quantity: quantity,
-              detail_id: item.detail_id || null 
-            }
-          ]
-        };
-
-    console.log("orderData", orderData);
-    
-    const response = await axios.post(
-      `${base_url}/qr/${token}/order`,
-      orderData,
-      getAuthHeaders()
-    );
-    
-    console.log("Order submitted successfully:", response.data);
-    setPendingOrders(prevOrders => [...prevOrders, orderData]);
-    window.location.reload();
-    
-  } catch (error) {
-    if (error.response && error.response.status === 400) {
-      setQrcodedontOrder(true);
-    } else {
-      console.error("Error submitting order:", error);
+    try {
+      // const orderData = {
+      //   stocks: [
+      //     {
+      //       stock_id: item.id,
+      //       quantity: quantity,
+      //       detail_id: item.detail_id || null 
+      //     }
+      //   ]
+      // };
+   const orderData = {
+        stock_sets: [
+          {
+            stock_set_id: item.id,
+            quantity: quantity,
+            detail_id: item.details || null 
+          }
+        ]
+      };
+  console.log("orderData",orderData);
+      const response = await axios.post(
+        `${base_url}/qr/${token}/order`,
+        orderData,
+        getAuthHeaders()
+      );
+      console.log("itembasketapply",item);
+      console.log("Order submitted successfully:", response.data);
+      setPendingOrders(prevOrders => [...prevOrders, orderData]);
+      window.location.reload();
+    } catch (error) {
+      if (error.response && error.response.status === 400) {
+        setQrcodedontOrder(true);
+      } else {
+        console.error("Error submitting order:", error);
+      }
+    } finally {
+      setSelectedItem(null);
     }
-  } finally {
-    setSelectedItem(null);
-  }
-};
+  };
 
 
   if (QrcodedontOrde)
@@ -989,81 +985,7 @@ const handleConfirmOrder = async (item, quantity) => {
   </div>
 </div>
 
-   {selectedCategory && (
-  <div className="grid mt-6 grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 ">
-    {selectedCategory === "sets"
-      ? stockSets.map((item, index) => (
-          <div
-            key={item.id || index}
-            className="w-full h-52 bg-white shadow-xl text-[#56525A] font-medium rounded-xl flex flex-col relative overflow-hidden cursor-pointer transform transition-transform hover:scale-105 hover:shadow-[0px_10px_40px_rgba(0,0,0,0.4)]"
-            onClick={() => handleItemClick(item)}
-          >
-            <Img
-              src={
-                item.image
-                  ? `${img_url}/${item.image}`
-                  : "/placeholder-image.jpg"
-              }
-              alt={item.name}
-              className="w-full h-[60%] object-cover rounded-t-xl"
-              width={200}
-              height={150}
-            />
-            <div className="absolute  flex justify-center justify-items-center mt-24 right-0 mr-2 bg-[#801423] w-14 h-5 rounded-md text-center ml-3">
-              <h1 className="text-sm   text-white font-bold ">
-                {item.price}₼
-              </h1>
-            </div>
 
-          
-            <div className="mt-1 flex flex-col gap-1">
-              <h1 className="text-xs font-semibold text-[#919191] ml-3">
-                {item.description}
-              </h1>
-            </div>
-
-              <h1 className="h-[15%] mt-1 text-lg font-semibold ml-3">
-              {item.name}
-            </h1>
-          </div>
-        ))
-      : menu
-          .find((category) => category.id === selectedCategory)
-          ?.stocks.map((item, index) => (
-            <div
-              key={item.id || index}
-              className="w-full h-52 bg-white shadow-xl text-[#56525A] font-medium rounded-xl flex flex-col relative overflow-hidden cursor-pointer transform transition-transform hover:scale-105 hover:shadow-[0px_10px_40px_rgba(0,0,0,0.4)]"
-              onClick={() => handleItemClick(item)}
-            >
-              <Img
-                src={
-                  item.image
-                    ? `${img_url}/${item.image}`
-                    : "/placeholder-image.jpg"
-                }
-                alt={item.name}
-                className="w-full h-[60%] object-cover rounded-t-xl"
-                width={200}
-                height={150}
-              />
-              <div className="absolute  flex justify-center justify-items-center mt-24 right-0 mr-2 bg-[#801423] w-14 h-5 rounded-md text-center ml-3">
-                <h1 className="text-sm   text-white font-bold ">
-                  {item.price}₼
-                </h1>
-              </div>
-
-              <h1 className="h-[15%] mt-1 text-lg font-semibold ml-3">
-                {item.name}
-              </h1>
-              <div className="mt-1 flex flex-col gap-1">
-                <h1 className="text-xs font-semibold text-[#919191] ml-3">
-                  {item.description}
-                </h1>
-              </div>
-            </div>
-          ))}
-  </div>
-)}
     </div>
 
 
