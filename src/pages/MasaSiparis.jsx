@@ -1018,17 +1018,17 @@ function MasaSiparis() {
                           <td className="p-5">{item.name}</td>
                           <td className="p-2">
                             <div className="flex items-center">
-                             <button
-  onClick={() => {
-    const newQuantity = item.quantity - 1;
-    if (newQuantity >= 0) {
-      handleManualQuantityChange(item, newQuantity);
-    }
-  }}
-  className="bg-red-500 text-white py-1 px-2 rounded-l focus:outline-none"
->
-  -
-</button>
+                              <button
+                                onClick={() => {
+                                  const newQuantity = item.quantity - 1;
+                                  if (newQuantity >= 0) {
+                                    handleManualQuantityChange(item, newQuantity);
+                                  }
+                                }}
+                                className="bg-red-500 text-white py-1 px-2 rounded-l focus:outline-none"
+                              >
+                                -
+                              </button>
 
                               <input
                                 type="number"
@@ -1186,8 +1186,9 @@ function MasaSiparis() {
                     onClick={() => handleCustomModal(set)}
 
                   >
-                    <div className="w-full h-32 bg-gray-300 mb-2">
-
+                    <div className="w-full h-32 bg-gray-900 mb-2">
+                      <img className="w-full h-full object-contain
+" src={`https://betaapi.smartcafe.az/storage/${set.image}`}/>
                     </div>
                     <div className="flex-grow">
                       <span className="block text-lg font-semibold">

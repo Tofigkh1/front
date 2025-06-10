@@ -23,7 +23,7 @@ import DontActiveAcount from './components/DontActiveAcount'
 import { base_url } from '../src/api/index'
 import Material from './pages/Material.jsx'
 import Expenses from './pages/expenses.jsx'
-import StocksAdd from './pages/stocksAdd.jsx'
+import StocksAdd from './pages/StocksAdd.jsx'
 const getHeaders = () => ({
   headers: {
     Authorization: `Bearer ${localStorage.getItem('token')}`,

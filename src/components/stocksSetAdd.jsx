@@ -3,6 +3,7 @@ import axios from "axios";
 import AccessDenied from "./AccessDenied";
 import { base_url } from "../api/index";
 import { FaTrash } from "react-icons/fa";
+import UpdateStockSetForm from "./UpdateStockSetForm";
 
 // Function to get authorization headers
 const getAuthHeaders = () => {
@@ -215,6 +216,7 @@ try {
   if (accessDenied) return <AccessDenied onClose={setAccessDenied} />;
 
   return (
+    <>
     <form
       onSubmit={handleSubmit}
       className="flex flex-col md:flex-row gap-4 w-full"
@@ -356,6 +358,8 @@ try {
 
       
     </form>
+    <UpdateStockSetForm/>
+    </>
   );
 }
 

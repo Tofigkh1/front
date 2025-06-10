@@ -12,7 +12,7 @@ import AccessDenied from "../components/AccessDenied";
 import { base_url } from "../api/index";
 import { Helmet } from "react-helmet";
 import ScreenPassword from "../components/ScreenPassword";
-import StocksSetAdd from "../components/stocksSetAdd";
+import StocksSetAdd from "../components/StocksSetAdd"
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
