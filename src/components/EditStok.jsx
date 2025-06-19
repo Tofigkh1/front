@@ -25,9 +25,9 @@ const EditStok = ({ item, onClose, onUpdate, rawMaterials, detailsItem }) => {
     useEffect(() => {
         if (rawMaterials && rawMaterials.length > 0) {
             const formatted = rawMaterials.map(raw => ({
-  id: String(raw.id),
-  quantity: parseFloat(raw.pivot?.quantity || '1')
-}));
+                id: String(raw.id),
+                quantity: parseFloat(raw.pivot?.quantity || '1')
+            }));
 
             setSelectedRawMaterials(formatted);
         }
@@ -163,13 +163,13 @@ const EditStok = ({ item, onClose, onUpdate, rawMaterials, detailsItem }) => {
 
             // Sonra hammaddeleri güncelle
             const payload = {
-  raw_materials: selectedRawMaterials
-    .filter(mat => mat.id && !isNaN(mat.id) && mat.quantity && !isNaN(mat.quantity))
-    .map(mat => ({
-      id: Number(mat.id),           // Must match raw_material.id, not stock.id
-      quantity: Number(mat.quantity),
-    }))
-};
+                raw_materials: selectedRawMaterials
+                    .filter(mat => mat.id && !isNaN(mat.id) && mat.quantity && !isNaN(mat.quantity))
+                    .map(mat => ({
+                        id: Number(mat.id),           // Must match raw_material.id, not stock.id
+                        quantity: Number(mat.quantity),
+                    }))
+            };
 
             console.log("payload", payload);
 
@@ -197,7 +197,7 @@ const EditStok = ({ item, onClose, onUpdate, rawMaterials, detailsItem }) => {
             }
         }
     };
-    console.log("Göndərilən raw_materials:",rawMaterialss);
+    console.log("Göndərilən raw_materials:", rawMaterialss);
 
 
     if (accessDenied) return <AccessDenied onClose={setAccessDenied} />;
@@ -266,53 +266,53 @@ const EditStok = ({ item, onClose, onUpdate, rawMaterials, detailsItem }) => {
                     </div>
 
                     <div>
-  {selectedRawMaterials.map((material, index) => (
-    <div key={index} className="flex flex-col items-center gap-2 mb-2">
-      <div className="w-full font-medium">Xammal</div>
-      <div className="flex items-center gap-2 mb-2 w-full">
-        <select
-          className="border rounded py-2 px-3 w-full text-sm font-medium"
-          value={material.id}
-          onChange={(e) => handleRawMaterialChange(index, "id", e.target.value)}
-          required
-        >
-          <option value="">Seçin</option>
-          {rawMaterialss.map((raw) => (
-            <option key={raw.id} value={raw.id}>
-              {raw.name}
-            </option>
-          ))}
-        </select>
-        <input
-          className="border rounded py-2 px-3 w-full text-sm font-medium"
-          type="number"
-          step="0.01"
-          value={material.quantity}
-          onChange={(e) =>
-            handleRawMaterialChange(index, "quantity", e.target.value)
-          }
-          required
-        />
-      </div>
-    </div>
-  ))}
+                        {selectedRawMaterials.map((material, index) => (
+                            <div key={index} className="flex flex-col items-center gap-2 mb-2">
+                                <div className="w-full font-medium">Xammal</div>
+                                <div className="flex items-center gap-2 mb-2 w-full">
+                                    <select
+                                        className="border rounded py-2 px-3 w-full text-sm font-medium"
+                                        value={material.id}
+                                        onChange={(e) => handleRawMaterialChange(index, "id", e.target.value)}
+                                        required
+                                    >
+                                        <option value="">Seçin</option>
+                                        {rawMaterialss.map((raw) => (
+                                            <option key={raw.id} value={raw.id}>
+                                                {raw.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <input
+                                        className="border rounded py-2 px-3 w-full text-sm font-medium"
+                                        type="number"
+                                        step="0.01"
+                                        value={material.quantity}
+                                        onChange={(e) =>
+                                            handleRawMaterialChange(index, "quantity", e.target.value)
+                                        }
+                                        required
+                                    />
+                                </div>
+                            </div>
+                        ))}
 
-  {/* Yeni xammal əlavə et düyməsi */}
-  <div className="mb-4 flex justify-start">
-    <button
-      type="button"
-      onClick={() =>
-        setSelectedRawMaterials([
-          ...selectedRawMaterials,
-          { id: "", quantity: 1 },
-        ])
-      }
-      className="text-sm text-blue-600 underline hover:text-blue-800"
-    >
-      + Yeni xammal əlavə et
-    </button>
-  </div>
-</div>
+                        {/* Yeni xammal əlavə et düyməsi */}
+                        <div className="mb-4 flex justify-start">
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setSelectedRawMaterials([
+                                        ...selectedRawMaterials,
+                                        { id: "", quantity: 1 },
+                                    ])
+                                }
+                                className="border hover:bg-sky-500 rounded py-1 px-2 bg-sky-600 text-white text-sm font-medium"
+                            >
+                                + Yeni xammal əlavə et
+                            </button>
+                        </div>
+                    </div>
 
 
                     <div className="mb-4">
